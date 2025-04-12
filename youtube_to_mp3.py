@@ -80,9 +80,10 @@ def get_video_info(url):
 class DownloadThread(QThread):
     progress = pyqtSignal(int)
     speed = pyqtSignal(str)
-    finished = pyqtSignal(str)
+    finished = pyqtSignal(str, str)  # (메시지, 파일경로)
     error = pyqtSignal(str)
-    conversion_progress = pyqtSignal(int)  # 변환 진행률 시그널 추가
+    conversion_progress = pyqtSignal(int)
+    stopped = pyqtSignal()
     
     def __init__(self, url, quality, save_path, ffmpeg_path):
         super().__init__()
@@ -90,9 +91,18 @@ class DownloadThread(QThread):
         self.quality = quality
         self.save_path = save_path
         self.ffmpeg_path = ffmpeg_path
+        self._is_running = True
+        self.output_file = None
+        
+    def stop(self):
+        self._is_running = False
+        self.stopped.emit()
         
     def run(self):
         try:
+            if not os.path.exists(self.ffmpeg_path):
+                raise FileNotFoundError("FFmpeg 경로가 올바르지 않습니다.")
+                
             quality_map = {
                 '320K': '320',
                 '256K': '256',
@@ -104,9 +114,12 @@ class DownloadThread(QThread):
                 '48K': '48'
             }
             
+            # 임시 파일명 생성
+            temp_filename = f"temp_{int(time.time())}"
+            
             ydl_opts = {
                 'format': f'bestaudio[abr<={quality_map[self.quality]}]',
-                'outtmpl': os.path.join(self.save_path, '%(title)s.%(ext)s'),
+                'outtmpl': os.path.join(self.save_path, f'{temp_filename}.%(ext)s'),
                 'postprocessors': [{
                     'key': 'FFmpegExtractAudio',
                     'preferredcodec': 'mp3',
@@ -121,19 +134,50 @@ class DownloadThread(QThread):
             }
             
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                ydl.download([self.url])
+                info = ydl.extract_info(self.url, download=True)
+                if not self._is_running:
+                    return
+                    
+                # 출력 파일 경로 확인
+                output_file = os.path.join(self.save_path, f"{temp_filename}.mp3")
+                if not os.path.exists(output_file):
+                    raise FileNotFoundError("변환된 파일을 찾을 수 없습니다.")
+                    
+                # 파일 크기 확인
+                file_size = os.path.getsize(output_file)
+                if file_size == 0:
+                    raise ValueError("변환된 파일이 비어 있습니다.")
+                    
+                # 최종 파일명으로 변경
+                final_filename = f"{info['title']}.mp3"
+                final_path = os.path.join(self.save_path, final_filename)
                 
-            # 변환 진행률 시뮬레이션 (실제로는 FFmpeg의 진행률을 추적할 수 없음)
-            for i in range(1, 101):
-                self.conversion_progress.emit(i)
-                time.sleep(0.05)  # 0.05초 간격으로 진행률 업데이트
+                # 파일명 중복 처리
+                counter = 1
+                while os.path.exists(final_path):
+                    final_filename = f"{info['title']}_{counter}.mp3"
+                    final_path = os.path.join(self.save_path, final_filename)
+                    counter += 1
+                    
+                os.rename(output_file, final_path)
+                self.output_file = final_path
                 
-            self.finished.emit('다운로드 완료')
-            
+                if not self._is_running:
+                    return
+                    
+                self.finished.emit('다운로드 완료', final_path)
+                
         except Exception as e:
-            self.error.emit(str(e))
-            
+            if self._is_running:
+                self.error.emit(str(e))
+                
+    def get_output_file(self):
+        return self.output_file
+
     def progress_hook(self, d):
+        if not self._is_running:
+            return
+            
         if d['status'] == 'downloading':
             try:
                 total = d.get('total_bytes', 0)
@@ -151,14 +195,21 @@ class DownloadThread(QThread):
                 pass
 
 class TitleCheckThread(QThread):
-    title_checked = pyqtSignal(str, bool)  # (제목, 성공여부)
+    title_checked = pyqtSignal(str, bool)
     
     def __init__(self, url):
         super().__init__()
         self.url = url
+        self._is_running = True
+        
+    def stop(self):
+        self._is_running = False
         
     def run(self):
         try:
+            if not self._is_running:
+                return
+                
             if not self.url:
                 self.title_checked.emit('', False)
                 return
@@ -168,13 +219,17 @@ class TitleCheckThread(QThread):
                 return
                 
             title = get_video_info(self.url)
+            if not self._is_running:
+                return
+                
             if title:
                 self.title_checked.emit(f'제목: {title}', True)
             else:
                 self.title_checked.emit('동영상 정보를 가져올 수 없습니다.', False)
                 
         except Exception as e:
-            self.title_checked.emit(f'오류: {str(e)}', False)
+            if self._is_running:
+                self.title_checked.emit(f'오류: {str(e)}', False)
 
 class YouTubeToMP3(QMainWindow):
     def __init__(self):
@@ -184,9 +239,19 @@ class YouTubeToMP3(QMainWindow):
         self.download_thread = None
         self.title_check_thread = None
         self.initUI()
-        # 다크 모드 기본 설정
         self.dark_mode_checkbox.setChecked(True)
         self.set_dark_mode()
+        
+    def closeEvent(self, event):
+        if self.download_thread and self.download_thread.isRunning():
+            self.download_thread.stop()
+            self.download_thread.wait()
+            
+        if self.title_check_thread and self.title_check_thread.isRunning():
+            self.title_check_thread.stop()
+            self.title_check_thread.wait()
+            
+        event.accept()
         
     def initUI(self):
         # GUI 크기 및 위치 설정
@@ -652,59 +717,43 @@ class YouTubeToMP3(QMainWindow):
             save_config(self.config)
             
     def on_url_changed(self, text):
-        """URL이 변경될 때 호출되는 메서드"""
-        # 이전 스레드가 실행 중이면 중지
         if self.title_check_thread and self.title_check_thread.isRunning():
-            self.title_check_thread.terminate()
+            self.title_check_thread.stop()
             self.title_check_thread.wait()
             self.title_check_thread = None
             
-        # UI 초기화
         self.title_label.setText('')
         self.convert_button.setEnabled(False)
         self.status_label.setText('')
         
-        # URL이 비어있으면 더 이상 진행하지 않음
         if not text.strip():
             return
             
-        # URL 유효성 검사
         if not is_valid_youtube_url(text.strip()):
             self.status_label.setText('유효하지 않은 YouTube URL입니다.')
             return
             
-        # 제목 확인 시작
         self.status_label.setText('제목을 가져오는 중...')
         self.title_check_thread = TitleCheckThread(text.strip())
         self.title_check_thread.title_checked.connect(self.handle_title_check)
         self.title_check_thread.start()
         
     def handle_title_check(self, title, success):
-        """제목 확인 결과 처리"""
         self.title_label.setText(title)
         self.convert_button.setEnabled(success)
         self.status_label.setText('')
         
     def convert_to_mp3(self):
-        """MP3 변환 시작"""
         try:
             url = self.url_input.text().strip()
             if not url:
                 QMessageBox.warning(self, '경고', 'URL을 입력해주세요.')
                 return
                 
-            # URL 유효성 검사
             if not is_valid_youtube_url(url):
                 QMessageBox.warning(self, '경고', '유효하지 않은 YouTube URL입니다.')
                 return
                 
-            # 제목 확인
-            title = get_video_info(url)
-            if not title:
-                QMessageBox.warning(self, '경고', '동영상 정보를 가져올 수 없습니다.')
-                return
-                
-            # 변환 버튼이 활성화되어 있는지 확인
             if not self.convert_button.isEnabled():
                 QMessageBox.warning(self, '경고', '유효한 동영상 URL을 입력해주세요.')
                 return
@@ -714,6 +763,10 @@ class YouTubeToMP3(QMainWindow):
             self.status_label.setText('다운로드 중...')
             self.convert_button.setEnabled(False)
             
+            if self.download_thread and self.download_thread.isRunning():
+                self.download_thread.stop()
+                self.download_thread.wait()
+                
             self.download_thread = DownloadThread(
                 url,
                 self.quality_combo.currentText(),
@@ -725,6 +778,7 @@ class YouTubeToMP3(QMainWindow):
             self.download_thread.finished.connect(self.download_finished)
             self.download_thread.error.connect(self.download_error)
             self.download_thread.conversion_progress.connect(self.update_conversion_progress)
+            self.download_thread.stopped.connect(self.download_stopped)
             self.download_thread.start()
             
         except Exception as e:
@@ -744,12 +798,20 @@ class YouTubeToMP3(QMainWindow):
         if percentage == 100:
             self.status_label.setText('변환이 완료되었습니다!')
             
-    def download_finished(self, message):
+    def download_finished(self, message, file_path):
         self.status_label.setText('변환이 완료되었습니다!')
         self.progress_bar.setValue(100)
+        
+        # 파일 정보 표시
+        file_size = os.path.getsize(file_path) / (1024 * 1024)  # MB 단위로 변환
+        quality = self.quality_combo.currentText()
+        
         msg = QMessageBox()
         msg.setWindowTitle('성공')
-        msg.setText('변환이 완료되었습니다!')
+        msg.setText(f'변환이 완료되었습니다!\n\n'
+                   f'파일: {os.path.basename(file_path)}\n'
+                   f'크기: {file_size:.2f} MB\n'
+                   f'음질: {quality}')
         msg.setStyleSheet("""
             QMessageBox {
                 background-color: #f0f0f0;
@@ -774,7 +836,6 @@ class YouTubeToMP3(QMainWindow):
         """)
         msg.exec_()
         self.reset_ui()
-        # GUI 초기화
         self.url_input.clear()
         self.title_label.clear()
         self.status_label.clear()
@@ -785,6 +846,11 @@ class YouTubeToMP3(QMainWindow):
     def download_error(self, error_message):
         self.status_label.setText('오류가 발생했습니다.')
         QMessageBox.critical(self, '오류', f'변환 중 오류가 발생했습니다: {error_message}')
+        self.reset_ui()
+        
+    def download_stopped(self):
+        self.status_label.setText('다운로드가 중지되었습니다.')
+        self.progress_bar.setValue(0)
         self.reset_ui()
         
     def reset_ui(self):
