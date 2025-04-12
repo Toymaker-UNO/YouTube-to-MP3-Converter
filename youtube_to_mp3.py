@@ -247,8 +247,9 @@ class DownloadThread(QThread):
                         self.download_completed = True
                         self.conversion_start_time = time.time()
                         self.conversion_started.emit()
+                        return  # 100% 도달 시 속도 업데이트 중지
                     
-                if speed:
+                if speed and not self.download_completed:  # 다운로드가 완료되지 않았을 때만 속도 업데이트
                     speed_str = f"{speed/1024/1024:.1f} MB/s"
                     self.speed.emit(speed_str)
             except:
@@ -885,12 +886,14 @@ class YouTubeToMP3(QMainWindow):
         self.progress_bar.setValue(percentage)
         if percentage == 100:
             self.status_label.setText('다운로드 완료, MP3 변환 중...')
+            self.speed_label.setText('')  # 속도 표시 지우기
             
     def update_speed(self, speed):
         self.speed_label.setText(speed)
             
     def on_conversion_started(self):
         self.status_label.setText('MP3 변환 중...')
+        self.speed_label.setText('')  # 속도 표시 지우기
         
     def download_finished(self, message, file_path):
         self.status_label.setText('변환이 완료되었습니다!')
