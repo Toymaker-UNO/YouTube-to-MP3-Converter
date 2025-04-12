@@ -323,7 +323,7 @@ class DownloadThread(QThread):
                 conversion_time = self.conversion_end_time - self.conversion_start_time
                 total_time = self.conversion_end_time - self.download_start_time
                 
-                logging.info(f"""
+                logging.critical(f"""
 파일 정보:
 - URL: {self.url}
 - 제목: {info['title']}
