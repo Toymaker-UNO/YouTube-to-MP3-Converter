@@ -11,6 +11,24 @@ import re
 import time
 import yt_dlp
 from datetime import datetime
+import logging
+from logging.handlers import RotatingFileHandler
+import codecs
+
+# 로깅 설정
+log_handler = RotatingFileHandler(
+    'conversion_log.txt',
+    encoding='utf-8',
+    maxBytes=10*1024*1024,  # 10MB
+    backupCount=2  # 최대 2개의 백업 파일 유지
+)
+
+logging.basicConfig(
+    handlers=[log_handler],
+    level=logging.INFO,
+    format='%(asctime)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
 
 CONFIG_FILE = 'youtube_to_mp3.config.json'
 
@@ -82,6 +100,7 @@ class DownloadThread(QThread):
     speed = pyqtSignal(str)
     finished = pyqtSignal(str, str)  # (메시지, 파일경로)
     error = pyqtSignal(str)
+    conversion_progress = pyqtSignal(int)
     conversion_started = pyqtSignal()
     stopped = pyqtSignal()
     
@@ -93,6 +112,12 @@ class DownloadThread(QThread):
         self.ffmpeg_path = ffmpeg_path
         self._is_running = True
         self.output_file = None
+        self.download_start_time = None
+        self.conversion_start_time = None
+        self.conversion_end_time = None
+        self.temp_filename = None
+        self.download_completed = False
+        self.download_started = False
         
     def stop(self):
         self._is_running = False
@@ -115,11 +140,11 @@ class DownloadThread(QThread):
             }
             
             # 임시 파일명 생성
-            temp_filename = f"temp_{int(time.time())}"
+            self.temp_filename = f"temp_{int(time.time())}"
             
             ydl_opts = {
                 'format': f'bestaudio[abr<={quality_map[self.quality]}]',
-                'outtmpl': os.path.join(self.save_path, f'{temp_filename}.%(ext)s'),
+                'outtmpl': os.path.join(self.save_path, f'{self.temp_filename}.%(ext)s'),
                 'postprocessors': [{
                     'key': 'FFmpegExtractAudio',
                     'preferredcodec': 'mp3',
@@ -133,19 +158,24 @@ class DownloadThread(QThread):
                 'no_warnings': True
             }
             
+            self.download_start_time = time.time()
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(self.url, download=True)
                 if not self._is_running:
                     return
                     
-                # 변환 시작 신호 전송
-                self.conversion_started.emit()
-                
                 # 출력 파일 경로 확인
-                output_file = os.path.join(self.save_path, f"{temp_filename}.mp3")
-                if not os.path.exists(output_file):
-                    raise FileNotFoundError("변환된 파일을 찾을 수 없습니다.")
-                    
+                output_file = os.path.join(self.save_path, f"{self.temp_filename}.mp3")
+                
+                # 변환 완료를 기다림
+                while not os.path.exists(output_file):
+                    if not self._is_running:
+                        return
+                    time.sleep(0.1)
+                
+                # 변환 완료 시간 기록
+                self.conversion_end_time = time.time()
+                
                 # 파일 크기 확인
                 file_size = os.path.getsize(output_file)
                 if file_size == 0:
@@ -164,6 +194,22 @@ class DownloadThread(QThread):
                     
                 os.rename(output_file, final_path)
                 self.output_file = final_path
+                
+                # 로그 기록
+                download_time = self.conversion_start_time - self.download_start_time
+                conversion_time = self.conversion_end_time - self.conversion_start_time
+                total_time = self.conversion_end_time - self.download_start_time
+                
+                logging.info(f"""
+파일 정보:
+- URL: {self.url}
+- 제목: {info['title']}
+- 원본 크기: {file_size / (1024*1024):.2f} MB
+- 다운로드 시간: {download_time:.2f} 초
+- 변환 시간: {conversion_time:.2f} 초
+- 총 소요 시간: {total_time:.2f} 초
+- 선택된 음질: {self.quality}
+                """)
                 
                 if not self._is_running:
                     return
@@ -190,6 +236,17 @@ class DownloadThread(QThread):
                 if total > 0:
                     percentage = int((downloaded / total) * 100)
                     self.progress.emit(percentage)
+                    
+                    # 다운로드 시작 시점 기록 (0%일 때)
+                    if percentage == 0 and not self.download_started:
+                        self.download_started = True
+                        self.download_start_time = time.time()
+                    
+                    # 다운로드가 100% 완료되면 변환 시작 시간 기록
+                    if percentage == 100 and not self.download_completed:
+                        self.download_completed = True
+                        self.conversion_start_time = time.time()
+                        self.conversion_started.emit()
                     
                 if speed:
                     speed_str = f"{speed/1024/1024:.1f} MB/s"
