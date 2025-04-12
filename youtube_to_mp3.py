@@ -15,31 +15,37 @@ import logging
 from logging.handlers import RotatingFileHandler
 import codecs
 
-# 로깅 설정
-log_handler = RotatingFileHandler(
-    'conversion_log.txt',
-    encoding='utf-8',
-    maxBytes=10*1024*1024,  # 10MB
-    backupCount=2  # 최대 2개의 백업 파일 유지
-)
-
-logging.basicConfig(
-    handlers=[log_handler],
-    level=logging.INFO,
-    format='%(asctime)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
-
 CONFIG_FILE = 'youtube_to_mp3.config.json'
 
 def load_config():
     try:
         if os.path.exists(CONFIG_FILE):
             with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
-                return json.load(f)
+                config = json.load(f)
+                # 기본값 설정
+                default_config = {
+                    'ffmpeg_path': '',
+                    'save_path': os.path.expanduser('~/Downloads'),
+                    'logging': {
+                        'enable_logging': True,
+                        'log_file': 'conversion_log.txt',
+                        'max_log_size_mb': 10,
+                        'max_backup_count': 2,
+                        'encoding': 'utf-8'
+                    }
+                }
+                # 기본값과 설정 파일의 값을 병합
+                for key, value in default_config.items():
+                    if key not in config:
+                        config[key] = value
+                    elif isinstance(value, dict):
+                        for subkey, subvalue in value.items():
+                            if subkey not in config[key]:
+                                config[key][subkey] = subvalue
+                return config
     except Exception as e:
         print(f"Error loading config: {e}")
-    return {'ffmpeg_path': '', 'save_path': os.path.expanduser('~/Downloads')}
+    return default_config
 
 def save_config(config):
     try:
@@ -47,6 +53,35 @@ def save_config(config):
             json.dump(config, f, ensure_ascii=False, indent=2)
     except Exception as e:
         print(f"Error saving config: {e}")
+
+# 로깅 설정
+def setup_logging():
+    config = load_config()
+    if config.get('logging', {}).get('enable_logging', True):
+        log_file = config.get('logging', {}).get('log_file', 'conversion_log.txt')
+        max_log_size = config.get('logging', {}).get('max_log_size_mb', 10) * 1024 * 1024
+        max_backup_count = config.get('logging', {}).get('max_backup_count', 2)
+        encoding = config.get('logging', {}).get('encoding', 'utf-8')
+        
+        log_handler = RotatingFileHandler(
+            log_file,
+            encoding=encoding,
+            maxBytes=max_log_size,
+            backupCount=max_backup_count
+        )
+        
+        logging.basicConfig(
+            handlers=[log_handler],
+            level=logging.INFO,
+            format='%(asctime)s - %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S'
+        )
+    else:
+        # 로깅 비활성화
+        logging.disable(logging.CRITICAL)
+
+# 로깅 설정 초기화
+setup_logging()
 
 def is_valid_youtube_url(url):
     youtube_regex = r'(https?://)?(www\.)?(youtube|youtu|youtube-nocookie)\.(com|be)/(watch\?v=|embed/|v/|.+\?v=)?([^"&?/s]{11})'
@@ -297,6 +332,7 @@ class YouTubeToMP3(QMainWindow):
         super().__init__()
         self.config = load_config()
         self.ffmpeg_path = self.config.get('ffmpeg_path', '')
+        self.save_path = self.config.get('save_path', os.path.expanduser('~/Downloads'))
         self.download_thread = None
         self.title_check_thread = None
         self.initUI()
@@ -372,7 +408,7 @@ class YouTubeToMP3(QMainWindow):
         path_label.setFixedWidth(100)
         self.path_input = QLineEdit()
         self.path_input.setReadOnly(True)
-        self.path_input.setText(self.config.get('save_path', os.path.expanduser('~/Downloads')))
+        self.path_input.setText(self.save_path)
         self.path_input.setMinimumHeight(35)
         self.path_button = QPushButton('찾아보기')
         self.path_button.setObjectName('path_button')  # 객체 이름 설정
