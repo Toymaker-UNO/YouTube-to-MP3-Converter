@@ -1,0 +1,23 @@
+# FFmpeg 디렉토리 제외
+ffmpeg-7.1.1-essentials_build/
+
+# Python 관련
+__pycache__/
+*.py[cod]
+*$py.class
+
+# 환경 설정 파일
+.env
+.venv
+env/
+venv/
+ENV/
+
+# IDE 관련
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# 로그 파일
+*.log 
