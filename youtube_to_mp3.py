@@ -12,7 +12,7 @@ import time
 import yt_dlp
 from datetime import datetime
 
-CONFIG_FILE = 'config.json'
+CONFIG_FILE = 'youtube_to_mp3.config.json'
 
 def load_config():
     try:
