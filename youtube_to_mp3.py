@@ -482,6 +482,7 @@ class YouTubeToMP3(QMainWindow):
                 border-radius: 4px;
                 padding: 5px;
                 font-size: 12px;
+                min-height: 25px;
             }
             QComboBox::drop-down {
                 border: none;
@@ -491,6 +492,19 @@ class YouTubeToMP3(QMainWindow):
                 image: url(down_arrow.png);
                 width: 12px;
                 height: 12px;
+            }
+            QComboBox QAbstractItemView {
+                background-color: #2b2b2b;
+                color: white;
+                border: 1px solid #3b3b3b;
+                selection-background-color: #4a90e2;
+                selection-color: white;
+            }
+            QComboBox:hover {
+                border: 1px solid #4a90e2;
+            }
+            QComboBox:on {
+                border: 1px solid #4a90e2;
             }
             QPushButton {
                 background-color: #2b2b2b;
@@ -610,6 +624,7 @@ class YouTubeToMP3(QMainWindow):
                 border-radius: 4px;
                 padding: 5px;
                 font-size: 12px;
+                min-height: 25px;
             }
             QComboBox::drop-down {
                 border: none;
@@ -619,6 +634,19 @@ class YouTubeToMP3(QMainWindow):
                 image: url(down_arrow.png);
                 width: 12px;
                 height: 12px;
+            }
+            QComboBox QAbstractItemView {
+                background-color: #ffffff;
+                color: black;
+                border: 1px solid #cccccc;
+                selection-background-color: #4a90e2;
+                selection-color: white;
+            }
+            QComboBox:hover {
+                border: 1px solid #4a90e2;
+            }
+            QComboBox:on {
+                border: 1px solid #4a90e2;
             }
             QPushButton {
                 background-color: #f0f0f0;
