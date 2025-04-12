@@ -214,7 +214,7 @@ class YouTubeToMP3(QMainWindow):
         self.url_input = QLineEdit()
         self.url_input.setPlaceholderText('YouTube URL을 입력하세요')
         self.url_input.setMinimumHeight(35)
-        self.url_input.textChanged.connect(self.start_title_check)
+        self.url_input.textChanged.connect(self.on_url_changed)
         
         # 클립보드 붙여넣기 버튼 추가
         self.paste_button = QPushButton('클립보드 붙여넣기')
@@ -651,30 +651,62 @@ class YouTubeToMP3(QMainWindow):
             self.config['save_path'] = folder
             save_config(self.config)
             
-    def start_title_check(self):
+    def on_url_changed(self, text):
+        """URL이 변경될 때 호출되는 메서드"""
         # 이전 스레드가 실행 중이면 중지
         if self.title_check_thread and self.title_check_thread.isRunning():
             self.title_check_thread.terminate()
             self.title_check_thread.wait()
+            self.title_check_thread = None
             
-        # 상태 레이블 업데이트
-        self.status_label.setText('제목을 가져오는 중...')
+        # UI 초기화
+        self.title_label.setText('')
+        self.convert_button.setEnabled(False)
+        self.status_label.setText('')
         
-        # 새 스레드 시작
-        self.title_check_thread = TitleCheckThread(self.url_input.text().strip())
+        # URL이 비어있으면 더 이상 진행하지 않음
+        if not text.strip():
+            return
+            
+        # URL 유효성 검사
+        if not is_valid_youtube_url(text.strip()):
+            self.status_label.setText('유효하지 않은 YouTube URL입니다.')
+            return
+            
+        # 제목 확인 시작
+        self.status_label.setText('제목을 가져오는 중...')
+        self.title_check_thread = TitleCheckThread(text.strip())
         self.title_check_thread.title_checked.connect(self.handle_title_check)
         self.title_check_thread.start()
         
     def handle_title_check(self, title, success):
+        """제목 확인 결과 처리"""
         self.title_label.setText(title)
         self.convert_button.setEnabled(success)
         self.status_label.setText('')
-            
+        
     def convert_to_mp3(self):
+        """MP3 변환 시작"""
         try:
             url = self.url_input.text().strip()
             if not url:
                 QMessageBox.warning(self, '경고', 'URL을 입력해주세요.')
+                return
+                
+            # URL 유효성 검사
+            if not is_valid_youtube_url(url):
+                QMessageBox.warning(self, '경고', '유효하지 않은 YouTube URL입니다.')
+                return
+                
+            # 제목 확인
+            title = get_video_info(url)
+            if not title:
+                QMessageBox.warning(self, '경고', '동영상 정보를 가져올 수 없습니다.')
+                return
+                
+            # 변환 버튼이 활성화되어 있는지 확인
+            if not self.convert_button.isEnabled():
+                QMessageBox.warning(self, '경고', '유효한 동영상 URL을 입력해주세요.')
                 return
                 
             self.progress_bar.setVisible(True)
@@ -692,7 +724,7 @@ class YouTubeToMP3(QMainWindow):
             self.download_thread.speed.connect(self.update_speed)
             self.download_thread.finished.connect(self.download_finished)
             self.download_thread.error.connect(self.download_error)
-            self.download_thread.conversion_progress.connect(self.update_conversion_progress)  # 변환 진행률 시그널 연결
+            self.download_thread.conversion_progress.connect(self.update_conversion_progress)
             self.download_thread.start()
             
         except Exception as e:
