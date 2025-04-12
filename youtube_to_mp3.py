@@ -82,7 +82,7 @@ class DownloadThread(QThread):
     speed = pyqtSignal(str)
     finished = pyqtSignal(str, str)  # (메시지, 파일경로)
     error = pyqtSignal(str)
-    conversion_progress = pyqtSignal(int)
+    conversion_started = pyqtSignal()
     stopped = pyqtSignal()
     
     def __init__(self, url, quality, save_path, ffmpeg_path):
@@ -138,6 +138,9 @@ class DownloadThread(QThread):
                 if not self._is_running:
                     return
                     
+                # 변환 시작 신호 전송
+                self.conversion_started.emit()
+                
                 # 출력 파일 경로 확인
                 output_file = os.path.join(self.save_path, f"{temp_filename}.mp3")
                 if not os.path.exists(output_file):
@@ -361,6 +364,7 @@ class YouTubeToMP3(QMainWindow):
         
         # 진행 상태 영역
         status_layout = QHBoxLayout()
+        status_layout.setSpacing(5)  # 위젯 간 간격을 5px로 설정
         self.progress_bar = QProgressBar()
         self.progress_bar.setVisible(False)
         self.progress_bar.setMinimumHeight(35)
@@ -378,9 +382,16 @@ class YouTubeToMP3(QMainWindow):
             }
         """)
         self.speed_label = QLabel('')
-        self.speed_label.setAlignment(Qt.AlignRight)
-        self.speed_label.setStyleSheet("font-size: 12px;")
-        status_layout.addWidget(self.progress_bar)
+        self.speed_label.setAlignment(Qt.AlignVCenter | Qt.AlignRight)
+        self.speed_label.setStyleSheet("""
+            QLabel {
+                font-size: 12px;
+                padding: 8px;
+                min-width: 80px;
+            }
+        """)
+        self.speed_label.setMinimumHeight(35)
+        status_layout.addWidget(self.progress_bar, 1)
         status_layout.addWidget(self.speed_label)
         main_layout.addLayout(status_layout)
         
@@ -805,7 +816,7 @@ class YouTubeToMP3(QMainWindow):
             self.download_thread.speed.connect(self.update_speed)
             self.download_thread.finished.connect(self.download_finished)
             self.download_thread.error.connect(self.download_error)
-            self.download_thread.conversion_progress.connect(self.update_conversion_progress)
+            self.download_thread.conversion_started.connect(self.on_conversion_started)
             self.download_thread.stopped.connect(self.download_stopped)
             self.download_thread.start()
             
@@ -816,16 +827,14 @@ class YouTubeToMP3(QMainWindow):
     def update_progress(self, percentage):
         self.progress_bar.setValue(percentage)
         if percentage == 100:
-            self.status_label.setText('MP3 변환 중...')
+            self.status_label.setText('다운로드 완료, MP3 변환 중...')
             
     def update_speed(self, speed):
         self.speed_label.setText(speed)
             
-    def update_conversion_progress(self, percentage):
-        self.progress_bar.setValue(percentage)
-        if percentage == 100:
-            self.status_label.setText('변환이 완료되었습니다!')
-            
+    def on_conversion_started(self):
+        self.status_label.setText('MP3 변환 중...')
+        
     def download_finished(self, message, file_path):
         self.status_label.setText('변환이 완료되었습니다!')
         self.progress_bar.setValue(100)
