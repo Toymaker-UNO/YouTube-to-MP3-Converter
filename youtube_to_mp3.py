@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
                            QComboBox, QFileDialog, QMessageBox, QProgressBar,
                            QTextEdit, QCheckBox, QStyle, QStyleFactory)
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
-from PyQt5.QtGui import QPalette, QColor
+from PyQt5.QtGui import QPalette, QColor, QClipboard
 import re
 import time
 import yt_dlp
@@ -215,8 +215,16 @@ class YouTubeToMP3(QMainWindow):
         self.url_input.setPlaceholderText('YouTube URL을 입력하세요')
         self.url_input.setMinimumHeight(35)
         self.url_input.textChanged.connect(self.start_title_check)
+        
+        # 클립보드 붙여넣기 버튼 추가
+        self.paste_button = QPushButton('클립보드 붙여넣기')
+        self.paste_button.setObjectName('paste_button')
+        self.paste_button.setFixedHeight(35)
+        self.paste_button.clicked.connect(self.paste_from_clipboard)
+        
         url_layout.addWidget(url_label)
         url_layout.addWidget(self.url_input)
+        url_layout.addWidget(self.paste_button)
         top_layout.addLayout(url_layout)
         
         # 음질 선택 영역
@@ -449,6 +457,19 @@ class YouTubeToMP3(QMainWindow):
                 background-color: #1b1b1b;
                 color: #666666;
             }
+            QPushButton#paste_button {
+                background-color: #2b2b2b;
+                color: white;
+                border: 2px solid #3b3b3b;
+                font-size: 12px;
+            }
+            QPushButton#paste_button:hover {
+                background-color: #3b3b3b;
+            }
+            QPushButton#paste_button:disabled {
+                background-color: #1b1b1b;
+                color: #666666;
+            }
             QPushButton#convert_button {
                 background-color: #2b2b2b;
                 color: white;
@@ -561,6 +582,19 @@ class YouTubeToMP3(QMainWindow):
                 background-color: #e0e0e0;
             }
             QPushButton#path_button:disabled {
+                background-color: #f5f5f5;
+                color: #999999;
+            }
+            QPushButton#paste_button {
+                background-color: #f0f0f0;
+                color: black;
+                border: 2px solid #cccccc;
+                font-size: 12px;
+            }
+            QPushButton#paste_button:hover {
+                background-color: #e0e0e0;
+            }
+            QPushButton#paste_button:disabled {
                 background-color: #f5f5f5;
                 color: #999999;
             }
@@ -726,6 +760,13 @@ class YouTubeToMP3(QMainWindow):
         self.progress_bar.setVisible(False)
         self.speed_label.setText('')
         self.status_label.setText('')
+
+    def paste_from_clipboard(self):
+        clipboard = QApplication.clipboard()
+        clipboard_text = clipboard.text()
+        if clipboard_text:
+            self.url_input.setText(clipboard_text)
+            
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
