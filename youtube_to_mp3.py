@@ -15,53 +15,43 @@ import traceback
 import psutil
 import threading
 from model.Log import Log
+from model.Configuration import Configuration
 
 CONFIG_FILE = 'youtube_to_mp3.config.json'
 
-# Log 인스턴스 생성
-log = Log()
+# 전역 변수
+config = None
+log = None
 
-def load_config():
-    """설정 파일을 로드합니다."""
-    try:
-        if os.path.exists(CONFIG_FILE):
-            with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
-                config = json.load(f)
-                # 기본값 설정
-                default_config = {
-                    'ffmpeg_path': '',
-                    'save_path': os.path.expanduser('~/Downloads'),
-                    'logging': {
-                        'enable_logging': True,
-                        'log_file': 'youtube_to_mp3.log.txt',
-                        'max_log_size_mb': 10,
-                        'max_backup_count': 2,
-                        'encoding': 'utf-8',
-                        'log_level': 'DEBUG',
-                        'enable_performance_logging': True
-                    }
-                }
-                # 기본값과 설정 파일의 값을 병합
-                for key, value in default_config.items():
-                    if key not in config:
-                        config[key] = value
-                    elif isinstance(value, dict):
-                        for subkey, subvalue in value.items():
-                            if subkey not in config[key]:
-                                config[key][subkey] = subvalue
-                return config
-    except Exception as e:
-        print(f"설정 파일 로드 중 오류 발생: {str(e)}")
-    return default_config
-
-def save_config(config):
-    log.info("설정 파일을 저장합니다.")
-    try:
-        with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
-            json.dump(config, f, ensure_ascii=False, indent=2)
-        log.info("설정 파일 저장 완료")
-    except Exception as e:
-        log.error(f"설정 파일 저장 중 오류 발생: {str(e)}")
+def initialize():
+    """애플리케이션의 초기화를 수행합니다.
+    - Configuration 인스턴스 생성 및 초기화
+    - Log 인스턴스 생성
+    - 로깅 설정 초기화
+    """
+    global config, log
+    
+    # Configuration 인스턴스 생성 및 초기화
+    config = Configuration()
+    config.initialize(CONFIG_FILE)
+    
+    # Log 인스턴스 생성
+    log = Log()
+    
+    # 로깅 설정 초기화
+    logging_config = config.get('logging')
+    log.initialize(
+        enable_logging=logging_config.get('enable_logging', True),
+        log_file=logging_config.get('log_file', 'youtube_to_mp3.log.txt'),
+        max_size_mb=logging_config.get('max_log_size_mb', 10),
+        backup_count=logging_config.get('max_backup_count', 2),
+        encoding=logging_config.get('encoding', 'utf-8'),
+        log_level=logging_config.get('log_level', 'DEBUG')
+    )
+    
+    # 성능 모니터링 활성화 여부 확인
+    if logging_config.get('enable_performance_logging', True):
+        start_performance_monitoring()
 
 def log_exception(e):
     """예외 정보를 상세히 로깅"""
@@ -93,27 +83,6 @@ def start_performance_monitoring():
     monitor_thread = threading.Thread(target=monitor, daemon=True)
     monitor_thread.start()
     log.info("성능 모니터링 스레드 시작")
-
-def setup_logging():
-    """로깅 시스템을 초기화합니다."""
-    config = load_config()
-    logging_config = config.get('logging', {})
-    
-    log.initialize(
-        enable_logging=logging_config.get('enable_logging', True),
-        log_file=logging_config.get('log_file', 'youtube_to_mp3.log.txt'),
-        max_size_mb=logging_config.get('max_log_size_mb', 10),
-        backup_count=logging_config.get('max_backup_count', 2),
-        encoding=logging_config.get('encoding', 'utf-8'),
-        log_level=logging_config.get('log_level', 'DEBUG')
-    )
-    
-    # 성능 모니터링 스레드 시작
-    if logging_config.get('enable_performance_logging', True):
-        start_performance_monitoring()
-
-# 로깅 설정 초기화
-setup_logging()
 
 def is_valid_youtube_url(url):
     """YouTube URL의 유효성을 검사합니다."""
@@ -391,9 +360,8 @@ class YouTubeToMP3(QMainWindow):
     def __init__(self):
         super().__init__()
         log.debug("YouTubeToMP3 애플리케이션 초기화")
-        self.config = load_config()
-        self.ffmpeg_path = self.config.get('ffmpeg_path', '')
-        self.save_path = self.config.get('save_path', os.path.expanduser('~/Downloads'))
+        self.ffmpeg_path = config.get('ffmpeg_path')
+        self.save_path = config.get('save_path')
         log.info(f"초기 설정: FFmpeg 경로={self.ffmpeg_path}, 저장 경로={self.save_path}")
         self.download_thread = None
         self.title_check_thread = None
@@ -876,8 +844,8 @@ class YouTubeToMP3(QMainWindow):
         if folder:
             log.info(f"새 저장 경로 선택: {folder}")
             self.path_input.setText(folder)
-            self.config['save_path'] = folder
-            save_config(self.config)
+            self.save_path = folder
+            config.set('save_path', folder)
             
     def on_url_changed(self, text):
         log.info(f"URL 변경 감지: {text}")
@@ -1059,11 +1027,11 @@ class YouTubeToMP3(QMainWindow):
             
 
 if __name__ == '__main__':
-    log.info("YouTube to MP3 Converter 애플리케이션 시작")
+    # 애플리케이션 초기화
+    initialize()
+    
     app = QApplication(sys.argv)
     ex = YouTubeToMP3()
     ex.show()
     log.info("메인 윈도우 표시")
-    exit_code = app.exec_()
-    log.info(f"애플리케이션 종료 (종료 코드: {exit_code})")
-    sys.exit(exit_code) 
+    sys.exit(app.exec_()) 
