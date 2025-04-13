@@ -4,8 +4,8 @@ import time
 from logging.handlers import RotatingFileHandler
 from typing import Optional
 
-class Y2MLog:
-    _instance: Optional['Y2MLog'] = None
+class Log:
+    _instance: Optional['Log'] = None
     _initialized: bool = False
 
     # 로그 설정 상수
@@ -25,7 +25,7 @@ class Y2MLog:
 
     def __new__(cls):
         if cls._instance is None:
-            cls._instance = super(Y2MLog, cls).__new__(cls)
+            cls._instance = super(Log, cls).__new__(cls)
         return cls._instance
 
     def __init__(self):
@@ -199,6 +199,6 @@ class Y2MLog:
         return not self.logger.disabled
 
 # 사용 예시:
-# logger = Y2MLog()
+# logger = Log()
 # logger.info("정보 메시지")
 # logger.error("에러 메시지") 

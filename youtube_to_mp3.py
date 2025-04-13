@@ -14,15 +14,15 @@ from datetime import datetime
 import traceback
 import psutil
 import threading
-from model.Y2MLog import Y2MLog
+from model.Log import Log
 
 CONFIG_FILE = 'youtube_to_mp3.config.json'
 
-# Y2MLog 인스턴스 생성
-logger = Y2MLog()
+# Log 인스턴스 생성
+log = Log()
 
 def load_config():
-    logger.info("설정 파일을 로드합니다.")
+    log.info("설정 파일을 로드합니다.")
     try:
         if os.path.exists(CONFIG_FILE):
             with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
@@ -49,26 +49,26 @@ def load_config():
                         for subkey, subvalue in value.items():
                             if subkey not in config[key]:
                                 config[key][subkey] = subvalue
-                logger.info("설정 파일 로드 완료")
+                log.info("설정 파일 로드 완료")
                 return config
     except Exception as e:
-        logger.error(f"설정 파일 로드 중 오류 발생: {str(e)}")
+        log.error(f"설정 파일 로드 중 오류 발생: {str(e)}")
     return default_config
 
 def save_config(config):
-    logger.info("설정 파일을 저장합니다.")
+    log.info("설정 파일을 저장합니다.")
     try:
         with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
             json.dump(config, f, ensure_ascii=False, indent=2)
-        logger.info("설정 파일 저장 완료")
+        log.info("설정 파일 저장 완료")
     except Exception as e:
-        logger.error(f"설정 파일 저장 중 오류 발생: {str(e)}")
+        log.error(f"설정 파일 저장 중 오류 발생: {str(e)}")
 
 def log_exception(e):
     """예외 정보를 상세히 로깅"""
-    logger.error(f"예외 발생: {str(e)}")
-    logger.error(f"예외 유형: {type(e).__name__}")
-    logger.error(f"스택 트레이스:\n{traceback.format_exc()}")
+    log.error(f"예외 발생: {str(e)}")
+    log.error(f"예외 유형: {type(e).__name__}")
+    log.error(f"스택 트레이스:\n{traceback.format_exc()}")
     
 def log_performance():
     """시스템 성능 정보 로깅"""
@@ -77,7 +77,7 @@ def log_performance():
     cpu_percent = process.cpu_percent()
     thread_count = threading.active_count()
     
-    logger.debug(f"""
+    log.debug(f"""
 성능 정보:
 - 메모리 사용량: {memory_info.rss / 1024 / 1024:.2f} MB
 - CPU 사용률: {cpu_percent}%
@@ -93,10 +93,10 @@ def start_performance_monitoring():
             
     monitor_thread = threading.Thread(target=monitor, daemon=True)
     monitor_thread.start()
-    logger.info("성능 모니터링 스레드 시작")
+    log.info("성능 모니터링 스레드 시작")
 
 def setup_logging():
-    logger.info("로깅 시스템 초기화 시작")
+    log.info("로깅 시스템 초기화 시작")
     config = load_config()
     if config.get('logging', {}).get('enable_logging', True):
         log_file = config.get('logging', {}).get('log_file', 'youtube_to_mp3.log.txt')
@@ -105,36 +105,36 @@ def setup_logging():
         encoding = config.get('logging', {}).get('encoding', 'utf-8')
         log_level = config.get('logging', {}).get('log_level', 'DEBUG')
         
-        logger.info(f"로깅 설정: 파일={log_file}, 최대크기={max_log_size}MB, 백업수={max_backup_count}, 인코딩={encoding}, 레벨={log_level}")
+        log.info(f"로깅 설정: 파일={log_file}, 최대크기={max_log_size}MB, 백업수={max_backup_count}, 인코딩={encoding}, 레벨={log_level}")
         
-        # Y2MLog 설정
-        logger.set_log_file_path(log_file)
-        logger.set_max_log_size_mb(max_log_size)
-        logger.set_max_backup_count(max_backup_count)
-        logger.set_encoding(encoding)
-        logger.set_level(log_level)
+        # Log 설정
+        log.set_log_file_path(log_file)
+        log.set_max_log_size_mb(max_log_size)
+        log.set_max_backup_count(max_backup_count)
+        log.set_encoding(encoding)
+        log.set_level(log_level)
         
         # 성능 모니터링 스레드 시작
         if config.get('logging', {}).get('enable_performance_logging', True):
             start_performance_monitoring()
             
-        logger.info("로깅 시스템 초기화 완료")
+        log.info("로깅 시스템 초기화 완료")
     else:
-        logger.info("로깅 비활성화됨")
-        logger.enable_logging(False)
+        log.info("로깅 비활성화됨")
+        log.enable_logging(False)
 
 # 로깅 설정 초기화
 setup_logging()
 
 def is_valid_youtube_url(url):
-    logger.info(f"URL 유효성 검사: {url}")
+    log.info(f"URL 유효성 검사: {url}")
     youtube_regex = r'(https?://)?(www\.)?(youtube|youtu|youtube-nocookie)\.(com|be)/(watch\?v=|embed/|v/|.+\?v=)?([^"&?/s]{11})'
     is_valid = bool(re.match(youtube_regex, url))
-    logger.info(f"URL 유효성 검사 결과: {is_valid}")
+    log.info(f"URL 유효성 검사 결과: {is_valid}")
     return is_valid
 
 def get_video_info(url):
-    logger.info(f"비디오 정보를 가져옵니다: {url}")
+    log.info(f"비디오 정보를 가져옵니다: {url}")
     try:
         # URL 정규화
         if 'youtu.be' in url:
@@ -143,7 +143,7 @@ def get_video_info(url):
         elif '&' in url:
             url = url.split('&')[0]
             
-        logger.info(f"처리 중인 URL: {url}")
+        log.info(f"처리 중인 URL: {url}")
         
         ydl_opts = {
             'quiet': True,
@@ -159,22 +159,22 @@ def get_video_info(url):
             info = ydl.extract_info(url, download=False)
             
             if info is None:
-                logger.error("비디오 정보를 추출할 수 없습니다.")
+                log.error("비디오 정보를 추출할 수 없습니다.")
                 return None
                 
             if 'entries' in info:  # 플레이리스트인 경우
-                logger.error("플레이리스트 URL은 지원하지 않습니다.")
+                log.error("플레이리스트 URL은 지원하지 않습니다.")
                 return None
                     
             if 'title' not in info:
-                logger.error("제목 정보가 없습니다.")
+                log.error("제목 정보가 없습니다.")
                 return None
                 
-            logger.info(f"비디오 제목: {info['title']}")
+            log.info(f"비디오 제목: {info['title']}")
             return info['title']
             
     except Exception as e:
-        logger.error(f"비디오 정보를 가져오는 중 오류 발생: {str(e)}")
+        log.error(f"비디오 정보를 가져오는 중 오류 발생: {str(e)}")
         return None
 
 class DownloadThread(QThread):
@@ -200,15 +200,15 @@ class DownloadThread(QThread):
         self.temp_filename = None
         self.download_completed = False
         self.download_started = False
-        logger.debug(f"다운로드 스레드 초기화: URL={url}, 품질={quality}, 저장경로={save_path}")
+        log.debug(f"다운로드 스레드 초기화: URL={url}, 품질={quality}, 저장경로={save_path}")
         
     def stop(self):
-        logger.info("다운로드 스레드 중지 요청")
+        log.info("다운로드 스레드 중지 요청")
         self._is_running = False
         self.stopped.emit()
         
     def run(self):
-        logger.debug("다운로드 스레드 시작")
+        log.debug("다운로드 스레드 시작")
         try:
             if not os.path.exists(self.ffmpeg_path):
                 raise FileNotFoundError("FFmpeg 경로가 올바르지 않습니다.")
@@ -226,7 +226,7 @@ class DownloadThread(QThread):
             
             # 임시 파일명 생성
             self.temp_filename = f"temp_{int(time.time())}"
-            logger.info(f"임시 파일명 생성: {self.temp_filename}")
+            log.info(f"임시 파일명 생성: {self.temp_filename}")
             
             ydl_opts = {
                 'format': f'bestaudio[abr<={quality_map[self.quality]}]',
@@ -245,27 +245,27 @@ class DownloadThread(QThread):
             }
             
             self.download_start_time = time.time()
-            logger.info("다운로드 시작")
+            log.info("다운로드 시작")
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(self.url, download=True)
                 if not self._is_running:
-                    logger.info("다운로드 중단됨")
+                    log.info("다운로드 중단됨")
                     return
                     
                 # 출력 파일 경로 확인
                 output_file = os.path.join(self.save_path, f"{self.temp_filename}.mp3")
-                logger.info(f"출력 파일 경로: {output_file}")
+                log.info(f"출력 파일 경로: {output_file}")
                 
                 # 변환 완료를 기다림
                 while not os.path.exists(output_file):
                     if not self._is_running:
-                        logger.info("변환 중단됨")
+                        log.info("변환 중단됨")
                         return
                     time.sleep(0.1)
                 
                 # 변환 완료 시간 기록
                 self.conversion_end_time = time.time()
-                logger.info("변환 완료")
+                log.info("변환 완료")
                 
                 # 파일 크기 확인
                 file_size = os.path.getsize(output_file)
@@ -275,7 +275,7 @@ class DownloadThread(QThread):
                 # 최종 파일명으로 변경
                 final_filename = f"{info['title']}.mp3"
                 final_path = os.path.join(self.save_path, final_filename)
-                logger.info(f"최종 파일명: {final_filename}")
+                log.info(f"최종 파일명: {final_filename}")
                 
                 # 파일명 중복 처리
                 counter = 1
@@ -283,7 +283,7 @@ class DownloadThread(QThread):
                     final_filename = f"{info['title']}_{counter}.mp3"
                     final_path = os.path.join(self.save_path, final_filename)
                     counter += 1
-                    logger.info(f"파일명 중복으로 새 이름 생성: {final_filename}")
+                    log.info(f"파일명 중복으로 새 이름 생성: {final_filename}")
                     
                 os.rename(output_file, final_path)
                 self.output_file = final_path
@@ -293,7 +293,7 @@ class DownloadThread(QThread):
                 conversion_time = self.conversion_end_time - self.conversion_start_time
                 total_time = self.conversion_end_time - self.download_start_time
                 
-                logger.critical(f"""
+                log.critical(f"""
 파일 정보:
 - URL: {self.url}
 - 제목: {info['title']}
@@ -305,7 +305,7 @@ class DownloadThread(QThread):
                 """)
                 
                 if not self._is_running:
-                    logger.info("작업 중단됨")
+                    log.info("작업 중단됨")
                     return
                     
                 self.finished.emit('다운로드 완료', final_path)
@@ -336,20 +336,20 @@ class DownloadThread(QThread):
                     if percentage == 0 and not self.download_started:
                         self.download_started = True
                         self.download_start_time = time.time()
-                        logger.info("다운로드 시작 (0%)")
+                        log.info("다운로드 시작 (0%)")
                     
                     # 다운로드가 100% 완료되면 변환 시작 시간 기록
                     if percentage == 100 and not self.download_completed:
                         self.download_completed = True
                         self.conversion_start_time = time.time()
                         self.conversion_started.emit()
-                        logger.info("다운로드 완료 (100%), 변환 시작")
+                        log.info("다운로드 완료 (100%), 변환 시작")
                         return  # 100% 도달 시 속도 업데이트 중지
                     
                 if speed and not self.download_completed:  # 다운로드가 완료되지 않았을 때만 속도 업데이트
                     speed_str = f"{speed/1024/1024:.1f} MB/s"
                     self.speed.emit(speed_str)
-                logger.debug(f"다운로드 진행률: {percentage}%, 속도: {speed_str}")
+                log.debug(f"다운로드 진행률: {percentage}%, 속도: {speed_str}")
             except Exception as e:
                 log_exception(e)
 
@@ -360,39 +360,39 @@ class TitleCheckThread(QThread):
         super().__init__()
         self.url = url
         self._is_running = True
-        logger.info(f"제목 확인 스레드 초기화: URL={url}")
+        log.info(f"제목 확인 스레드 초기화: URL={url}")
         
     def stop(self):
-        logger.info("제목 확인 스레드 중지 요청")
+        log.info("제목 확인 스레드 중지 요청")
         self._is_running = False
         
     def run(self):
-        logger.info("제목 확인 스레드 시작")
+        log.info("제목 확인 스레드 시작")
         try:
             if not self._is_running:
-                logger.info("제목 확인 중단됨")
+                log.info("제목 확인 중단됨")
                 return
                 
             if not self.url:
-                logger.warning("URL이 비어있음")
+                log.warning("URL이 비어있음")
                 self.title_checked.emit('', False)
                 return
                 
             if not is_valid_youtube_url(self.url):
-                logger.warning("유효하지 않은 YouTube URL")
+                log.warning("유효하지 않은 YouTube URL")
                 self.title_checked.emit('올바르지 않은 YouTube URL입니다.', False)
                 return
                 
             title = get_video_info(self.url)
             if not self._is_running:
-                logger.info("제목 확인 중단됨")
+                log.info("제목 확인 중단됨")
                 return
                 
             if title:
-                logger.info(f"제목 확인 완료: {title}")
+                log.info(f"제목 확인 완료: {title}")
                 self.title_checked.emit(f'제목: {title}', True)
             else:
-                logger.warning("제목을 가져올 수 없음")
+                log.warning("제목을 가져올 수 없음")
                 self.title_checked.emit('동영상 정보를 가져올 수 없습니다.', False)
                 
         except Exception as e:
@@ -403,11 +403,11 @@ class TitleCheckThread(QThread):
 class YouTubeToMP3(QMainWindow):
     def __init__(self):
         super().__init__()
-        logger.debug("YouTubeToMP3 애플리케이션 초기화")
+        log.debug("YouTubeToMP3 애플리케이션 초기화")
         self.config = load_config()
         self.ffmpeg_path = self.config.get('ffmpeg_path', '')
         self.save_path = self.config.get('save_path', os.path.expanduser('~/Downloads'))
-        logger.info(f"초기 설정: FFmpeg 경로={self.ffmpeg_path}, 저장 경로={self.save_path}")
+        log.info(f"초기 설정: FFmpeg 경로={self.ffmpeg_path}, 저장 경로={self.save_path}")
         self.download_thread = None
         self.title_check_thread = None
         self.initUI()
@@ -415,22 +415,22 @@ class YouTubeToMP3(QMainWindow):
         self.set_dark_mode()
         
     def closeEvent(self, event):
-        logger.debug("애플리케이션 종료")
+        log.debug("애플리케이션 종료")
         log_performance()  # 종료 시 성능 정보 로깅
         if self.download_thread and self.download_thread.isRunning():
-            logger.info("다운로드 스레드 종료")
+            log.info("다운로드 스레드 종료")
             self.download_thread.stop()
             self.download_thread.wait()
             
         if self.title_check_thread and self.title_check_thread.isRunning():
-            logger.info("제목 확인 스레드 종료")
+            log.info("제목 확인 스레드 종료")
             self.title_check_thread.stop()
             self.title_check_thread.wait()
             
         event.accept()
         
     def initUI(self):
-        logger.info("UI 초기화")
+        log.info("UI 초기화")
         # GUI 크기 및 위치 설정
         self.setWindowTitle('YouTube to MP3 Converter')
         self.setGeometry(100, 100, 1000, 500)
@@ -589,16 +589,16 @@ class YouTubeToMP3(QMainWindow):
         main_layout.addLayout(button_layout)
         
     def toggle_dark_mode(self, state):
-        logger.info(f"다크 모드 전환: {'활성화' if state == Qt.Checked else '비활성화'}")
+        log.info(f"다크 모드 전환: {'활성화' if state == Qt.Checked else '비활성화'}")
         if state == Qt.Checked:
             self.set_dark_mode()
-            logger.info("다크 모드 스타일 적용")
+            log.info("다크 모드 스타일 적용")
         else:
             self.set_light_mode()
-            logger.info("라이트 모드 스타일 적용")
+            log.info("라이트 모드 스타일 적용")
             
     def set_dark_mode(self):
-        logger.info("다크 모드 UI 스타일 설정")
+        log.info("다크 모드 UI 스타일 설정")
         self.setStyleSheet("""
             QMainWindow {
                 background-color: #1a1a1a;
@@ -741,7 +741,7 @@ class YouTubeToMP3(QMainWindow):
         """)
         
     def set_light_mode(self):
-        logger.info("라이트 모드 UI 스타일 설정")
+        log.info("라이트 모드 UI 스타일 설정")
         self.setStyleSheet("""
             QMainWindow {
                 background-color: #f0f0f0;
@@ -884,18 +884,18 @@ class YouTubeToMP3(QMainWindow):
         """)
         
     def select_path(self):
-        logger.info("저장 경로 선택 대화상자 열기")
+        log.info("저장 경로 선택 대화상자 열기")
         folder = QFileDialog.getExistingDirectory(self, '저장 경로 선택')
         if folder:
-            logger.info(f"새 저장 경로 선택: {folder}")
+            log.info(f"새 저장 경로 선택: {folder}")
             self.path_input.setText(folder)
             self.config['save_path'] = folder
             save_config(self.config)
             
     def on_url_changed(self, text):
-        logger.info(f"URL 변경 감지: {text}")
+        log.info(f"URL 변경 감지: {text}")
         if self.title_check_thread and self.title_check_thread.isRunning():
-            logger.info("이전 제목 확인 스레드 중지")
+            log.info("이전 제목 확인 스레드 중지")
             self.title_check_thread.stop()
             self.title_check_thread.wait()
             self.title_check_thread = None
@@ -905,57 +905,57 @@ class YouTubeToMP3(QMainWindow):
         self.status_label.setText('')
         
         if not text.strip():
-            logger.info("URL이 비어있음")
+            log.info("URL이 비어있음")
             return
             
         if not is_valid_youtube_url(text.strip()):
-            logger.warning("유효하지 않은 YouTube URL")
+            log.warning("유효하지 않은 YouTube URL")
             self.status_label.setText('유효하지 않은 YouTube URL입니다.')
             return
             
-        logger.info("제목 확인 시작")
+        log.info("제목 확인 시작")
         self.status_label.setText('제목을 가져오는 중...')
         self.title_check_thread = TitleCheckThread(text.strip())
         self.title_check_thread.title_checked.connect(self.handle_title_check)
         self.title_check_thread.start()
         
     def handle_title_check(self, title, success):
-        logger.info(f"제목 확인 결과: {title}, 성공={success}")
+        log.info(f"제목 확인 결과: {title}, 성공={success}")
         self.title_label.setText(title)
         self.convert_button.setEnabled(success)
         self.status_label.setText('')
         
     def convert_to_mp3(self):
-        logger.debug("MP3 변환 시작")
+        log.debug("MP3 변환 시작")
         try:
             url = self.url_input.text().strip()
             if not url:
-                logger.warning("URL이 비어있음")
+                log.warning("URL이 비어있음")
                 QMessageBox.warning(self, '경고', 'URL을 입력해주세요.')
                 return
                 
             if not is_valid_youtube_url(url):
-                logger.warning("유효하지 않은 YouTube URL")
+                log.warning("유효하지 않은 YouTube URL")
                 QMessageBox.warning(self, '경고', '유효하지 않은 YouTube URL입니다.')
                 return
                 
             if not self.convert_button.isEnabled():
-                logger.warning("변환 버튼이 비활성화됨")
+                log.warning("변환 버튼이 비활성화됨")
                 QMessageBox.warning(self, '경고', '유효한 동영상 URL을 입력해주세요.')
                 return
                 
-            logger.info("다운로드 준비")
+            log.info("다운로드 준비")
             self.progress_bar.setVisible(True)
             self.progress_bar.setValue(0)
             self.status_label.setText('다운로드 중...')
             self.convert_button.setEnabled(False)
             
             if self.download_thread and self.download_thread.isRunning():
-                logger.info("이전 다운로드 스레드 중지")
+                log.info("이전 다운로드 스레드 중지")
                 self.download_thread.stop()
                 self.download_thread.wait()
                 
-            logger.info("새 다운로드 스레드 시작")
+            log.info("새 다운로드 스레드 시작")
             self.download_thread = DownloadThread(
                 url,
                 self.quality_combo.currentText(),
@@ -976,23 +976,23 @@ class YouTubeToMP3(QMainWindow):
             self.reset_ui()
             
     def update_progress(self, percentage):
-        logger.debug(f"다운로드 진행률: {percentage}%")
+        log.debug(f"다운로드 진행률: {percentage}%")
         self.progress_bar.setValue(percentage)
         if percentage == 100:
             self.status_label.setText('다운로드 완료, MP3 변환 중...')
             self.speed_label.setText('')  # 속도 표시 지우기
             
     def update_speed(self, speed):
-        logger.debug(f"다운로드 속도: {speed}")
+        log.debug(f"다운로드 속도: {speed}")
         self.speed_label.setText(speed)
             
     def on_conversion_started(self):
-        logger.info("MP3 변환 시작")
+        log.info("MP3 변환 시작")
         self.status_label.setText('MP3 변환 중...')
         self.speed_label.setText('')  # 속도 표시 지우기
         
     def download_finished(self, message, file_path):
-        logger.info(f"다운로드 완료: {file_path}")
+        log.info(f"다운로드 완료: {file_path}")
         self.status_label.setText('변환이 완료되었습니다!')
         self.progress_bar.setValue(100)
         
@@ -1000,7 +1000,7 @@ class YouTubeToMP3(QMainWindow):
         file_size = os.path.getsize(file_path) / (1024 * 1024)  # MB 단위로 변환
         quality = self.quality_combo.currentText()
         
-        logger.info(f"""
+        log.info(f"""
 변환 완료 정보:
 - 파일: {os.path.basename(file_path)}
 - 크기: {file_size:.2f} MB
@@ -1045,26 +1045,26 @@ class YouTubeToMP3(QMainWindow):
         self.convert_button.setEnabled(False)
         
     def download_error(self, error_message):
-        logger.error(f"다운로드 오류: {error_message}")
+        log.error(f"다운로드 오류: {error_message}")
         self.status_label.setText('오류가 발생했습니다.')
         QMessageBox.critical(self, '오류', f'변환 중 오류가 발생했습니다: {error_message}')
         self.reset_ui()
         
     def download_stopped(self):
-        logger.info("다운로드 중지됨")
+        log.info("다운로드 중지됨")
         self.status_label.setText('다운로드가 중지되었습니다.')
         self.progress_bar.setValue(0)
         self.reset_ui()
         
     def reset_ui(self):
-        logger.info("UI 초기화")
+        log.info("UI 초기화")
         self.convert_button.setEnabled(True)
         self.progress_bar.setVisible(False)
         self.speed_label.setText('')
         self.status_label.setText('')
 
     def paste_from_clipboard(self):
-        logger.info("클립보드에서 붙여넣기")
+        log.info("클립보드에서 붙여넣기")
         clipboard = QApplication.clipboard()
         clipboard_text = clipboard.text()
         if clipboard_text:
@@ -1072,11 +1072,11 @@ class YouTubeToMP3(QMainWindow):
             
 
 if __name__ == '__main__':
-    logger.info("YouTube to MP3 Converter 애플리케이션 시작")
+    log.info("YouTube to MP3 Converter 애플리케이션 시작")
     app = QApplication(sys.argv)
     ex = YouTubeToMP3()
     ex.show()
-    logger.info("메인 윈도우 표시")
+    log.info("메인 윈도우 표시")
     exit_code = app.exec_()
-    logger.info(f"애플리케이션 종료 (종료 코드: {exit_code})")
+    log.info(f"애플리케이션 종료 (종료 코드: {exit_code})")
     sys.exit(exit_code) 
