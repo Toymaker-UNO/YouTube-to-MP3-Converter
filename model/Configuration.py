@@ -5,6 +5,7 @@ class Configuration:
     _instance = None
     _config: Dict[str, Any] = {}
     _initialized = False
+    _config_file: str = ""
     
     def __new__(cls):
         if cls._instance is None:
@@ -25,6 +26,7 @@ class Configuration:
             return
         
         self._initialized = True
+        self._config_file = config_file
         try:
             with open(config_file, 'r', encoding='utf-8') as f:
                 self._config = json.load(f)
@@ -58,3 +60,53 @@ class Configuration:
             else:
                 return None
         return result 
+
+    def set(self, value: Any, *keys: str) -> None:
+        """설정 값을 업데이트합니다.
+        
+        Args:
+            value: 설정할 값
+            *keys: 업데이트할 설정의 키 값들 (여러 단계의 중첩된 키)
+            
+        Examples:
+            # 단일 키
+            config.set("C:/ffmpeg/bin", "ffmpeg_path")
+            
+            # 중첩된 키
+            config.set("app.log", "logging", "log_file")
+            
+            # 더 깊은 중첩 구조
+            config.set("new_value", "level1", "level2", "level3", "level4")
+        """
+        if not keys:
+            return
+            
+        current = self._config
+        for i, key in enumerate(keys[:-1]):
+            if key not in current:
+                current[key] = {}
+            current = current[key]
+            
+        current[keys[-1]] = value
+
+    def save(self, config_file: str = None) -> None:
+        """현재 설정을 JSON 파일로 저장합니다.
+        
+        Args:
+            config_file (str, optional): 저장할 JSON 파일의 경로. 
+                                      지정하지 않으면 initialize에서 사용한 파일 경로를 사용합니다.
+            
+        Examples:
+            config.save()  # initialize에서 사용한 파일 경로로 저장
+            config.save("new_config.json")  # 새로운 파일 경로로 저장
+        """
+        save_file = config_file if config_file else self._config_file
+        if not save_file:
+            print("저장할 파일 경로가 지정되지 않았습니다.")
+            return
+            
+        try:
+            with open(save_file, 'w', encoding='utf-8') as f:
+                json.dump(self._config, f, indent=4, ensure_ascii=False)
+        except Exception as e:
+            print(f"설정 파일 저장 중 오류 발생: {str(e)}") 
