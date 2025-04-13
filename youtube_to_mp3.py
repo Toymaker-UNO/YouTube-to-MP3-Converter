@@ -22,7 +22,7 @@ CONFIG_FILE = 'youtube_to_mp3.config.json'
 log = Log()
 
 def load_config():
-    log.info("설정 파일을 로드합니다.")
+    """설정 파일을 로드합니다."""
     try:
         if os.path.exists(CONFIG_FILE):
             with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
@@ -49,10 +49,9 @@ def load_config():
                         for subkey, subvalue in value.items():
                             if subkey not in config[key]:
                                 config[key][subkey] = subvalue
-                log.info("설정 파일 로드 완료")
                 return config
     except Exception as e:
-        log.error(f"설정 파일 로드 중 오류 발생: {str(e)}")
+        print(f"설정 파일 로드 중 오류 발생: {str(e)}")
     return default_config
 
 def save_config(config):
@@ -96,42 +95,30 @@ def start_performance_monitoring():
     log.info("성능 모니터링 스레드 시작")
 
 def setup_logging():
-    log.info("로깅 시스템 초기화 시작")
+    """로깅 시스템을 초기화합니다."""
     config = load_config()
-    if config.get('logging', {}).get('enable_logging', True):
-        log_file = config.get('logging', {}).get('log_file', 'youtube_to_mp3.log.txt')
-        max_log_size = config.get('logging', {}).get('max_log_size_mb', 10)
-        max_backup_count = config.get('logging', {}).get('max_backup_count', 2)
-        encoding = config.get('logging', {}).get('encoding', 'utf-8')
-        log_level = config.get('logging', {}).get('log_level', 'DEBUG')
-        
-        log.info(f"로깅 설정: 파일={log_file}, 최대크기={max_log_size}MB, 백업수={max_backup_count}, 인코딩={encoding}, 레벨={log_level}")
-        
-        # Log 설정
-        log.set_log_file_path(log_file)
-        log.set_max_log_size_mb(max_log_size)
-        log.set_max_backup_count(max_backup_count)
-        log.set_encoding(encoding)
-        log.set_level(log_level)
-        
-        # 성능 모니터링 스레드 시작
-        if config.get('logging', {}).get('enable_performance_logging', True):
-            start_performance_monitoring()
-            
-        log.info("로깅 시스템 초기화 완료")
-    else:
-        log.info("로깅 비활성화됨")
-        log.enable_logging(False)
+    logging_config = config.get('logging', {})
+    
+    log.initialize(
+        enable_logging=logging_config.get('enable_logging', True),
+        log_file=logging_config.get('log_file', 'youtube_to_mp3.log.txt'),
+        max_size_mb=logging_config.get('max_log_size_mb', 10),
+        backup_count=logging_config.get('max_backup_count', 2),
+        encoding=logging_config.get('encoding', 'utf-8'),
+        log_level=logging_config.get('log_level', 'DEBUG')
+    )
+    
+    # 성능 모니터링 스레드 시작
+    if logging_config.get('enable_performance_logging', True):
+        start_performance_monitoring()
 
 # 로깅 설정 초기화
 setup_logging()
 
 def is_valid_youtube_url(url):
-    log.info(f"URL 유효성 검사: {url}")
+    """YouTube URL의 유효성을 검사합니다."""
     youtube_regex = r'(https?://)?(www\.)?(youtube|youtu|youtube-nocookie)\.(com|be)/(watch\?v=|embed/|v/|.+\?v=)?([^"&?/s]{11})'
-    is_valid = bool(re.match(youtube_regex, url))
-    log.info(f"URL 유효성 검사 결과: {is_valid}")
-    return is_valid
+    return bool(re.match(youtube_regex, url))
 
 def get_video_info(url):
     log.info(f"비디오 정보를 가져옵니다: {url}")
