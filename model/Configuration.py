@@ -39,7 +39,8 @@ class Configuration:
                     "initial_opacity": float,
                     "start_delay": int
                 }
-            }
+            },
+            "labels": list  # 라벨 설정을 배열로 변경
         }
     }
     

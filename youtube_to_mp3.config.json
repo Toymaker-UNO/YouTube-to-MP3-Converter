@@ -40,6 +40,74 @@
         "initial_opacity": 0.5,
         "start_delay": 100
       }
-    }
+    },
+    "labels": [
+      {
+        "id": "url_label",
+        "text": "YouTube URL:",
+        "position": {
+          "x": 20,
+          "y": 20,
+          "alignment": "left",
+          "margin": {
+            "top": "10px",
+            "right": "10px",
+            "bottom": "10px",
+            "left": "10px"
+          }
+        },
+        "style": {
+          "color": "#ffffff",
+          "font_size": "14px",
+          "font_family": "Arial",
+          "font_weight": "bold",
+          "background_color": "transparent",
+          "border": {
+            "width": "0px",
+            "color": "transparent",
+            "radius": "0px"
+          },
+          "padding": {
+            "top": "5px",
+            "right": "5px",
+            "bottom": "5px",
+            "left": "5px"
+          }
+        }
+      },
+      {
+        "id": "quality_label",
+        "text": "음질 선택:",
+        "position": {
+          "x": 20,
+          "y": 80,
+          "alignment": "left",
+          "margin": {
+            "top": "10px",
+            "right": "10px",
+            "bottom": "10px",
+            "left": "10px"
+          }
+        },
+        "style": {
+          "color": "#ffffff",
+          "font_size": "14px",
+          "font_family": "Arial",
+          "font_weight": "bold",
+          "background_color": "transparent",
+          "border": {
+            "width": "0px",
+            "color": "transparent",
+            "radius": "0px"
+          },
+          "padding": {
+            "top": "5px",
+            "right": "5px",
+            "bottom": "5px",
+            "left": "5px"
+          }
+        }
+      }
+    ]
   }
 } 
