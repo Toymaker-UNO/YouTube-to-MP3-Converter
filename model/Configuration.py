@@ -15,7 +15,8 @@ class Configuration:
                 "icon_path": str,
                 "size": {
                     "width": int,
-                    "height": int
+                    "height": int,
+                    "fixed": bool
                 },
                 "position": {
                     "x": int,
