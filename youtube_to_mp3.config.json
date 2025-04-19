@@ -33,9 +33,11 @@
         "margin": "5px"
       },
       "animation": {
-        "enabled": true,
+        "enabled": false,
         "duration": 300,
-        "easing": "OutCubic"
+        "easing": "OutCubic",
+        "initial_opacity": 0.5,
+        "start_delay": 100
       }
     }
   }

@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QMainWindow
 from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import QPropertyAnimation, QEasingCurve
+from PyQt5.QtCore import QPropertyAnimation, QEasingCurve, QTimer
 from model.Configuration import Configuration
 
 class GUIBuilder:
@@ -15,6 +15,10 @@ class GUIBuilder:
         
         Returns:
             QMainWindow: 생성된 메인 윈도우
+            
+        Raises:
+            KeyError: 필수 설정이 누락된 경우
+            ValueError: 설정 값의 타입이 맞지 않는 경우
         """
         window = QMainWindow()
         window_config = self.config.get('gui', 'main_window')
@@ -42,7 +46,10 @@ class GUIBuilder:
         # 애니메이션 설정
         animation = window_config['animation']
         if animation['enabled']:
-            self._setup_animations(window, animation)
+            # 초기 투명도 설정
+            window.setWindowOpacity(animation['initial_opacity'])
+            # 윈도우가 표시된 후 애니메이션 시작
+            QTimer.singleShot(animation['start_delay'], lambda: self._setup_animations(window, animation))
         
         return window
         
@@ -56,7 +63,7 @@ class GUIBuilder:
         # 페이드 인 애니메이션
         fade_animation = QPropertyAnimation(window, b"windowOpacity")
         fade_animation.setDuration(animation_config['duration'])
-        fade_animation.setStartValue(0.0)
+        fade_animation.setStartValue(animation_config['initial_opacity'])
         fade_animation.setEndValue(1.0)
         
         # 이징 커브 설정
