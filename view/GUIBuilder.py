@@ -1,4 +1,6 @@
 from PyQt5.QtWidgets import QMainWindow
+from PyQt5.QtGui import QIcon
+from PyQt5.QtCore import QPropertyAnimation, QEasingCurve
 from model.Configuration import Configuration
 
 class GUIBuilder:
@@ -15,24 +17,54 @@ class GUIBuilder:
             QMainWindow: 생성된 메인 윈도우
         """
         window = QMainWindow()
-        window_config = self.config.get('gui', 'main_window') or {}
+        window_config = self.config.get('gui', 'main_window')
         
         # 기본 설정 적용
-        window.setWindowTitle(window_config.get('title', 'YouTube to MP3 Converter'))
+        window.setWindowTitle(window_config['title'])
+        
+        # 아이콘 설정
+        icon_path = window_config['icon_path']
+        if icon_path:
+            window.setWindowIcon(QIcon(icon_path))
         
         # 크기 설정
-        size = window_config.get('size', {})
-        window.resize(size.get('width', 800), size.get('height', 600))
+        size = window_config['size']
+        window.resize(size['width'], size['height'])
         
         # 위치 설정
-        position = window_config.get('position', {})
-        window.move(position.get('x', 100), position.get('y', 100))
+        position = window_config['position']
+        window.move(position['x'], position['y'])
         
         # 스타일 설정
-        style = window_config.get('style', {})
+        style = window_config['style']
         window.setStyleSheet(self._create_style_sheet('QMainWindow', style))
         
+        # 애니메이션 설정
+        animation = window_config['animation']
+        if animation['enabled']:
+            self._setup_animations(window, animation)
+        
         return window
+        
+    def _setup_animations(self, window: QMainWindow, animation_config: dict) -> None:
+        """윈도우 애니메이션 설정
+        
+        Args:
+            window (QMainWindow): 애니메이션을 적용할 윈도우
+            animation_config (dict): 애니메이션 설정
+        """
+        # 페이드 인 애니메이션
+        fade_animation = QPropertyAnimation(window, b"windowOpacity")
+        fade_animation.setDuration(animation_config['duration'])
+        fade_animation.setStartValue(0.0)
+        fade_animation.setEndValue(1.0)
+        
+        # 이징 커브 설정
+        easing_type = getattr(QEasingCurve, animation_config['easing'], QEasingCurve.OutCubic)
+        fade_animation.setEasingCurve(easing_type)
+        
+        # 애니메이션 시작
+        fade_animation.start()
         
     def _create_style_sheet(self, widget_type: str, style: dict) -> str:
         """스타일시트 생성
@@ -46,11 +78,11 @@ class GUIBuilder:
         """
         return f"""
             {widget_type} {{
-                background-color: {style.get('background_color', 'transparent')};
-                color: {style.get('text_color', '#000000')};
-                border: {style.get('border_width', '1px')} solid {style.get('border_color', '#000000')};
-                border-radius: {style.get('border_radius', '0px')};
-                padding: {style.get('padding', '0px')};
-                margin: {style.get('margin', '0px')};
+                background-color: {style['background_color']};
+                color: {style['text_color']};
+                border: {style['border_width']} solid {style['border_color']};
+                border-radius: {style['border_radius']};
+                padding: {style['padding']};
+                margin: {style['margin']};
             }}
         """ 

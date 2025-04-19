@@ -7,6 +7,39 @@ class Configuration:
     _initialized = False
     _config_file: str = ""
     
+    # 기본값 정의
+    _default_config = {
+        "gui": {
+            "main_window": {
+                "title": "YouTube to MP3 Converter",
+                "icon_path": "resources/icon.png",
+                "size": {
+                    "width": 800,
+                    "height": 600
+                },
+                "position": {
+                    "x": 100,
+                    "y": 100
+                },
+                "style": {
+                    "theme": "dark",
+                    "background_color": "#2b2b2b",
+                    "text_color": "#ffffff",
+                    "border_color": "#3c3f41",
+                    "border_width": "1px",
+                    "border_radius": "5px",
+                    "padding": "10px",
+                    "margin": "5px"
+                },
+                "animation": {
+                    "enabled": True,
+                    "duration": 300,
+                    "easing": "OutCubic"
+                }
+            }
+        }
+    }
+    
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(Configuration, cls).__new__(cls)
@@ -32,7 +65,23 @@ class Configuration:
                 self._config = json.load(f)
         except Exception as e:
             print(f"설정 파일 파싱 중 오류 발생: {str(e)}")
-            self._config = {} 
+            self._config = {}
+            
+        # 기본값과 설정 파일의 값을 병합
+        self._merge_defaults()
+    
+    def _merge_defaults(self) -> None:
+        """기본값과 설정 파일의 값을 병합합니다."""
+        def merge_dicts(d1: dict, d2: dict) -> dict:
+            result = d1.copy()
+            for key, value in d2.items():
+                if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+                    result[key] = merge_dicts(result[key], value)
+                else:
+                    result[key] = value
+            return result
+        
+        self._config = merge_dicts(self._default_config, self._config)
     
     def get(self, *keys: str) -> Any:
         """설정 값을 가져옵니다.
@@ -41,7 +90,7 @@ class Configuration:
             *keys: 가져올 설정의 키 값들 (여러 단계의 중첩된 키)
             
         Returns:
-            Any: 설정 값. 키가 없는 경우 None을 반환
+            Any: 설정 값. 키가 없는 경우 기본값을 반환
             
         Examples:
             # 단일 키
@@ -100,13 +149,11 @@ class Configuration:
             config.save()  # initialize에서 사용한 파일 경로로 저장
             config.save("new_config.json")  # 새로운 파일 경로로 저장
         """
-        save_file = config_file if config_file else self._config_file
-        if not save_file:
-            print("저장할 파일 경로가 지정되지 않았습니다.")
-            return
+        if config_file is None:
+            config_file = self._config_file
             
         try:
-            with open(save_file, 'w', encoding='utf-8') as f:
-                json.dump(self._config, f, indent=4, ensure_ascii=False)
+            with open(config_file, 'w', encoding='utf-8') as f:
+                json.dump(self._config, f, indent=2, ensure_ascii=False)
         except Exception as e:
             print(f"설정 파일 저장 중 오류 발생: {str(e)}") 
