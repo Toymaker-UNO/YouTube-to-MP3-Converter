@@ -1,31 +1,24 @@
+from PyQt5.QtWidgets import QMainWindow
 from model.Configuration import Configuration
-from view.MainWindowItem import MainWindowItem
-from view.LabelItem import LabelItem
-from view.ButtonItem import ButtonItem
-from view.LineEditItem import LineEditItem
-from view.ComboBoxItem import ComboBoxItem
-from view.ProgressBarItem import ProgressBarItem
-from view.CheckBoxItem import CheckBoxItem
-from view.TextEditItem import TextEditItem
 
 class GUIBuilder:
-    """GUI Item을 생성하고 설정을 적용하는 클래스"""
+    """설정 파일을 읽어 메인 윈도우를 생성하는 클래스"""
     
     def __init__(self):
         """GUIBuilder 초기화"""
         self.config = Configuration()
         
-    def create_main_window(self) -> MainWindowItem:
+    def create_main_window(self) -> QMainWindow:
         """메인 윈도우 생성
         
         Returns:
-            MainWindowItem: 생성된 메인 윈도우
+            QMainWindow: 생성된 메인 윈도우
         """
-        window = MainWindowItem()
-        window_config = self.config.get('main_window', {})
+        window = QMainWindow()
+        window_config = self.config.get('gui', 'main_window') or {}
         
         # 기본 설정 적용
-        window.set_window_title(window_config.get('title', 'YouTube to MP3 Converter'))
+        window.setWindowTitle(window_config.get('title', 'YouTube to MP3 Converter'))
         
         # 크기 설정
         size = window_config.get('size', {})
@@ -59,15 +52,5 @@ class GUIBuilder:
                 border-radius: {style.get('border_radius', '0px')};
                 padding: {style.get('padding', '0px')};
                 margin: {style.get('margin', '0px')};
-            }}
-            {widget_type}:hover {{
-                background-color: {style.get('hover_background_color', 'transparent')};
-                color: {style.get('hover_text_color', '#000000')};
-                border-color: {style.get('hover_border_color', '#000000')};
-            }}
-            {widget_type}:focus {{
-                background-color: {style.get('focus_background_color', 'transparent')};
-                color: {style.get('focus_text_color', '#000000')};
-                border-color: {style.get('focus_border_color', '#000000')};
             }}
         """ 
