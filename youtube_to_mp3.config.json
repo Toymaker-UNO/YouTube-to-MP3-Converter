@@ -16,7 +16,8 @@
       "icon_path": "resources/icon.png",
       "size": {
         "width": 800,
-        "height": 600
+        "height": 600,
+        "fixed": true
       },
       "position": {
         "x": 100,

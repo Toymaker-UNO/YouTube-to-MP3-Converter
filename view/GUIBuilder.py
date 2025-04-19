@@ -35,6 +35,10 @@ class GUIBuilder:
         size = window_config['size']
         window.resize(size['width'], size['height'])
         
+        # 윈도우 크기 고정 설정
+        if size.get('fixed', False):
+            window.setFixedSize(size['width'], size['height'])
+        
         # 위치 설정
         position = window_config['position']
         window.move(position['x'], position['y'])
