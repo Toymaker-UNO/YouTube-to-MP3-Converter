@@ -14,13 +14,13 @@ class Configuration:
                 "title": str,
                 "icon_path": str,
                 "size": {
-                    "width": int,
-                    "height": int,
+                    "width": str,
+                    "height": str,
                     "fixed": bool
                 },
                 "position": {
-                    "x": int,
-                    "y": int
+                    "x": str,
+                    "y": str
                 },
                 "style": {
                     "theme": str,

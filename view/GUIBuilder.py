@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QMainWindow, QLabel, QVBoxLayout, QWidget
+from PyQt5.QtWidgets import QMainWindow, QLabel, QWidget
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import QPropertyAnimation, QEasingCurve, QTimer
 from model.Configuration import Configuration
@@ -33,25 +33,33 @@ class GUIBuilder:
         
         # 크기 설정
         size = window_config['size']
-        window.resize(size['width'], size['height'])
+        width = self._parse_pixel_value(size['width'])
+        height = self._parse_pixel_value(size['height'])
+        window.resize(width, height)
         
         # 윈도우 크기 고정 설정
         if size.get('fixed', False):
-            window.setFixedSize(size['width'], size['height'])
+            window.setFixedSize(width, height)
         
         # 위치 설정
         position = window_config['position']
-        window.move(position['x'], position['y'])
+        x = self._parse_pixel_value(position['x'])
+        y = self._parse_pixel_value(position['y'])
+        window.move(x, y)
         
         # 중앙 위젯 생성
         central_widget = QWidget()
         window.setCentralWidget(central_widget)
         
-        # 라벨 생성
+        # 라벨 생성 및 배치
         labels = self.config.get('gui', 'labels')
         for label_config in labels:
             label = self._create_label(label_config)
-            label.setParent(central_widget)  # 중앙 위젯을 부모로 설정
+            position = label_config['position']
+            x = self._parse_pixel_value(position['x'])
+            y = self._parse_pixel_value(position['y'])
+            label.move(x, y)
+            label.setParent(central_widget)  # 라벨을 central_widget의 자식으로 설정
         
         # 스타일 설정
         style = window_config['style']
@@ -67,6 +75,29 @@ class GUIBuilder:
         
         return window
         
+    def _parse_pixel_value(self, value: str) -> int:
+        """픽셀 값을 파싱합니다.
+        
+        Args:
+            value (str): 픽셀 값 (예: "800px")
+            
+        Returns:
+            int: 파싱된 픽셀 값
+            
+        Raises:
+            ValueError: 픽셀 값이 유효하지 않은 경우
+        """
+        if isinstance(value, int):
+            return value
+            
+        if not isinstance(value, str):
+            raise ValueError(f"유효하지 않은 픽셀 값: {value}")
+            
+        if value.endswith('px'):
+            return int(value[:-2])
+        else:
+            raise ValueError(f"유효하지 않은 픽셀 값: {value}")
+        
     def _create_label(self, config: dict) -> QLabel:
         """라벨 위젯을 생성합니다.
         
@@ -77,10 +108,6 @@ class GUIBuilder:
             QLabel: 생성된 라벨 위젯
         """
         label = QLabel(config['text'])
-        
-        # 위치 설정
-        position = config['position']
-        label.move(position['x'], position['y'])
         
         # 스타일 설정
         style = config['style']
