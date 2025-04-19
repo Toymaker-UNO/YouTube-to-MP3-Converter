@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QMainWindow
+from PyQt5.QtWidgets import QMainWindow, QLabel, QVBoxLayout, QWidget
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import QPropertyAnimation, QEasingCurve, QTimer
 from model.Configuration import Configuration
@@ -43,6 +43,16 @@ class GUIBuilder:
         position = window_config['position']
         window.move(position['x'], position['y'])
         
+        # 중앙 위젯 생성
+        central_widget = QWidget()
+        window.setCentralWidget(central_widget)
+        
+        # 라벨 생성
+        labels = self.config.get('gui', 'labels')
+        for label_config in labels:
+            label = self._create_label(label_config)
+            label.setParent(central_widget)  # 중앙 위젯을 부모로 설정
+        
         # 스타일 설정
         style = window_config['style']
         window.setStyleSheet(self._create_style_sheet('QMainWindow', style))
@@ -56,6 +66,52 @@ class GUIBuilder:
             QTimer.singleShot(animation['start_delay'], lambda: self._setup_animations(window, animation))
         
         return window
+        
+    def _create_label(self, config: dict) -> QLabel:
+        """라벨 위젯을 생성합니다.
+        
+        Args:
+            config (dict): 라벨 설정
+            
+        Returns:
+            QLabel: 생성된 라벨 위젯
+        """
+        label = QLabel(config['text'])
+        
+        # 위치 설정
+        position = config['position']
+        label.move(position['x'], position['y'])
+        
+        # 스타일 설정
+        style = config['style']
+        label.setStyleSheet(self._create_label_style_sheet(style))
+        
+        return label
+        
+    def _create_label_style_sheet(self, style: dict) -> str:
+        """라벨 스타일시트를 생성합니다.
+        
+        Args:
+            style (dict): 스타일 설정
+            
+        Returns:
+            str: 생성된 스타일시트
+        """
+        return f"""
+            QLabel {{
+                color: {style['color']};
+                font-size: {style['font_size']};
+                font-family: {style['font_family']};
+                font-weight: {style['font_weight']};
+                background-color: {style['background_color']};
+                border: {style['border']['width']} solid {style['border']['color']};
+                border-radius: {style['border']['radius']};
+                padding-top: {style['padding']['top']};
+                padding-right: {style['padding']['right']};
+                padding-bottom: {style['padding']['bottom']};
+                padding-left: {style['padding']['left']};
+            }}
+        """
         
     def _setup_animations(self, window: QMainWindow, animation_config: dict) -> None:
         """윈도우 애니메이션 설정

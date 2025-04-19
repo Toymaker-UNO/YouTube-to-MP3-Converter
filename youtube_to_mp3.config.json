@@ -47,7 +47,7 @@
         "text": "YouTube URL:",
         "position": {
           "x": 20,
-          "y": 20,
+          "y": 15,
           "alignment": "left",
           "margin": {
             "top": "10px",
@@ -60,7 +60,7 @@
           "color": "#ffffff",
           "font_size": "14px",
           "font_family": "Arial",
-          "font_weight": "bold",
+          "font_weight": "normal",
           "background_color": "transparent",
           "border": {
             "width": "0px",
@@ -80,7 +80,7 @@
         "text": "음질 선택:",
         "position": {
           "x": 20,
-          "y": 80,
+          "y": 50,
           "alignment": "left",
           "margin": {
             "top": "10px",
@@ -93,7 +93,7 @@
           "color": "#ffffff",
           "font_size": "14px",
           "font_family": "Arial",
-          "font_weight": "bold",
+          "font_weight": "normal",
           "background_color": "transparent",
           "border": {
             "width": "0px",
