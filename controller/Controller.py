@@ -1,11 +1,40 @@
 from PyQt5.QtWidgets import QMainWindow, QPushButton, QLineEdit, QApplication, QPlainTextEdit, QComboBox
 from PyQt5.QtGui import QClipboard
-from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtCore import Qt, QTimer, QThread, pyqtSignal
 from controller.Converter import Converter
 
 
 # 전역 상수 정의
 URL_CHECK_DELAY_MS = 1000  # URL 검사 타이머 지연 시간 (밀리초)
+
+
+class URLCheckThread(QThread):
+    """URL 검사와 제목 가져오기를 처리하는 스레드"""
+    result_ready = pyqtSignal(str, bool)  # (제목 또는 메시지, 성공 여부)
+    
+    def __init__(self, url, converter):
+        super().__init__()
+        self.url = url
+        self.converter = converter
+        
+    def run(self):
+        try:
+            if not self.url.strip():
+                self.result_ready.emit("URL입력을 기다리고 있습니다.", False)
+                return
+                
+            if not self.converter.is_valid_youtube_url(self.url.strip()):
+                self.result_ready.emit("올바르지 않은 URL입니다.", False)
+                return
+                
+            title = self.converter.get_video_title(self.url.strip())
+            if title:
+                self.result_ready.emit(f"제목: {title}", True)
+            else:
+                self.result_ready.emit("동영상 정보를 가져올 수 없습니다.", False)
+                
+        except Exception as e:
+            self.result_ready.emit(f"오류 발생: {str(e)}", False)
 
 
 class Controller:
@@ -29,6 +58,7 @@ class Controller:
             self._window = window
             self._clipboard = QApplication.clipboard()
             self._converter = Converter()
+            self._url_check_thread = None
             self._setup_event_handlers()
             self._initialized = True
             
@@ -86,44 +116,35 @@ class Controller:
 
     def _check_url(self, text):
         """URL을 검사하고 결과에 따라 UI를 업데이트합니다."""
+        # 이전 스레드가 실행 중이면 중지
+        if self._url_check_thread and self._url_check_thread.isRunning():
+            self._url_check_thread.terminate()
+            self._url_check_thread.wait()
+            
+        # 새 스레드 생성 및 시작
+        self._url_check_thread = URLCheckThread(text, self._converter)
+        self._url_check_thread.result_ready.connect(self._handle_url_check_result)
+        self._url_check_thread.start()
+        
+        # 로그 디스플레이에 검사 중 메시지 표시
+        log_display = self._window.findChild(QPlainTextEdit, "log_display")
+        if log_display:
+            log_display.setPlainText("URL을 검사하는 중...")
+
+    def _handle_url_check_result(self, message, success):
+        """URL 검사 결과를 처리합니다."""
         log_display = self._window.findChild(QPlainTextEdit, "log_display")
         quality_combo = self._window.findChild(QComboBox, "quality_combo")
         download_button = self._window.findChild(QPushButton, "download_button")
-
-        if not text.strip():
-            if log_display:
-                log_display.setPlainText("URL입력을 기다리고 있습니다.")
-            if quality_combo:
-                quality_combo.setEnabled(False)
-            if download_button:
-                download_button.setEnabled(False)
-            return
-
-        if not self._converter.is_valid_youtube_url(text.strip()):
-            if log_display:
-                log_display.setPlainText("올바르지 않은 URL입니다.")
-            if quality_combo:
-                quality_combo.setEnabled(False)
-            if download_button:
-                download_button.setEnabled(False)
-            return
-
-        # URL이 유효한 경우 제목을 가져옴
-        title = self._converter.get_video_title(text.strip())
-        if title:
-            if log_display:
-                log_display.setPlainText(f"제목: {title}")
-            if quality_combo:
-                quality_combo.setEnabled(True)
-            if download_button:
-                download_button.setEnabled(True)
-        else:
-            if log_display:
-                log_display.setPlainText("동영상 정보를 가져올 수 없습니다.")
-            if quality_combo:
-                quality_combo.setEnabled(False)
-            if download_button:
-                download_button.setEnabled(False)
+        
+        if log_display:
+            log_display.setPlainText(message)
+            
+        if quality_combo:
+            quality_combo.setEnabled(success)
+            
+        if download_button:
+            download_button.setEnabled(success)
 
 
 # 싱글톤 인스턴스 생성
