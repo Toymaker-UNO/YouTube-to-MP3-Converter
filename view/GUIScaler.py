@@ -70,9 +70,6 @@ class GUIScaler:
         # 스타일시트 적용
         self._apply_stylesheet()
         
-        # DPI 스케일링 활성화
-        self._enable_dpi_scaling()
-        
         return self.scale_factor
     
     def _initialize(self):
@@ -143,11 +140,6 @@ class GUIScaler:
                 background-color: #1b1b1b;
             }}
         """)
-    
-    def _enable_dpi_scaling(self):
-        """DPI 스케일링을 활성화합니다."""
-        self.app.setAttribute(Qt.AA_EnableHighDpiScaling, True)
-        self.app.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
     
     def get_scale_factor(self) -> float:
         """현재 스케일 팩터를 반환합니다."""
