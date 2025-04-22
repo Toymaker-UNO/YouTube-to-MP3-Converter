@@ -50,9 +50,14 @@ class GUIScaler:
         raise TypeError("GUIScaler는 싱글톤 클래스입니다. 인스턴스를 직접 생성할 수 없습니다.")
     
     @staticmethod
-    def initialize_dpi_awareness():
-        """DPI 인식 설정을 초기화합니다."""
-        try:
+    def initialize_dpi_scaling_and_awareness():
+        """Qt DPI 스케일링 설정과 Windows DPI 인식 설정을 초기화합니다."""
+        try:    
+            # Qt DPI 스케일링 설정
+            QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
+            QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
+
+            # Windows DPI 인식 설정
             user32 = ctypes.windll.user32
             user32.SetProcessDPIAware()
         except:

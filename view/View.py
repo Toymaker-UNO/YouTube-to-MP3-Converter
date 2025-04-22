@@ -18,7 +18,7 @@ class View:
     def initialize(self):
         """DPI 인식 설정을 초기화합니다."""
         if not self._initialized:
-            GUIScaler.initialize_dpi_awareness()
+            GUIScaler.initialize_dpi_scaling_and_awareness()
             self._initialized = True
 
     def run(self, app):
