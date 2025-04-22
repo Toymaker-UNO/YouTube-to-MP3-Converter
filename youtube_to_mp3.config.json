@@ -248,11 +248,19 @@
             "border": "1px solid #4d4d4d",
             "border-radius": "3px",
             "padding": "5px",
-            "font-size": "14px"
+            "font-size": "14px",
+            "font-family": "Arial"
           }
         },
+        "animation": {
+          "enabled": false,
+          "duration": 200,
+          "easing": "OutCubic",
+          "initial_opacity": 1.0,
+          "start_delay": 0
+        },
         "customizing": {
-          "items": ["Best", "High", "Medium", "Low"],
+          "items": ["320K", "256K", "192K", "160K", "128K", "96K", "64K", "48K"],
           "default_index": 0,
           "enabled": false
         }

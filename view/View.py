@@ -9,19 +9,27 @@ class View:
     """View 클래스의 싱글톤 구현."""
     _instance = None
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls):
         if not cls._instance:
-            cls._instance = super(View, cls).__new__(cls, *args, **kwargs)
+            cls._instance = super(View, cls).__new__(cls)
             cls._instance._initialized = False
         return cls._instance
 
     def initialize(self):
-        """DPI 인식 설정을 초기화합니다."""
+        """DPI 인식 설정을 초기화하고 GUI를 실행합니다."""
         if not self._initialized:
             GUIScaler.initialize_dpi_scaling_and_awareness()
             self._initialized = True
+            
+            # QApplication 생성
+            app = QApplication(sys.argv)
+            
+            # GUI 실행
+            window = self._run(app)
+            
+            return app, window
 
-    def run(self, app):
+    def _run(self, app):
         """GUI를 실행하고 메인 윈도우를 반환합니다."""
         # GUI 스케일링 적용
         gui_scaler = GUIScaler()
