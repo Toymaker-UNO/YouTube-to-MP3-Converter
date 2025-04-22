@@ -325,6 +325,10 @@ class GUIBuilder:
         """개별 콤보박스 위젯을 생성하고 설정합니다."""
         combo = QComboBox()
         
+        # ID 설정
+        if 'id' in combo_config:
+            combo.setObjectName(combo_config['id'])
+        
         # 위치 설정
         if 'position' in combo_config:
             pos = combo_config['position']

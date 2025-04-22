@@ -99,6 +99,20 @@ class Controller:
 
     def _handle_url_typing(self, text):
         """URL 입력 중 타이핑 이벤트 핸들러"""
+        # quality_combo와 download_button 비활성화
+        quality_combo = self._window.findChild(QComboBox, "quality_combo", Qt.FindChildrenRecursively)
+        download_button = self._window.findChild(QPushButton, "download_button")
+        
+        if quality_combo:
+            quality_combo.setEnabled(False)
+        if download_button:
+            download_button.setEnabled(False)
+            
+        # 로그 디스플레이에 메시지 표시
+        log_display = self._window.findChild(QPlainTextEdit, "log_display")
+        if log_display:
+            log_display.setPlainText("URL을 검사하는 중...")
+            
         # 타이머 재시작
         self._url_check_timer.stop()
         self._url_check_timer.start(URL_CHECK_DELAY_MS)  # 설정된 지연 시간 후에 검사
@@ -109,6 +123,21 @@ class Controller:
         if url_input:
             clipboard_text = self._clipboard.text()
             url_input.setText(clipboard_text)
+            
+            # quality_combo와 download_button 비활성화
+            quality_combo = self._window.findChild(QComboBox, "quality_combo", Qt.FindChildrenRecursively)
+            download_button = self._window.findChild(QPushButton, "download_button")
+            
+            if quality_combo:
+                quality_combo.setEnabled(False)
+            if download_button:
+                download_button.setEnabled(False)
+                
+            # 로그 디스플레이에 메시지 표시
+            log_display = self._window.findChild(QPlainTextEdit, "log_display")
+            if log_display:
+                log_display.setPlainText("URL을 검사하는 중...")
+                
             # 붙여넣기 후 즉시 검사
             self._check_url(clipboard_text)
         else:
