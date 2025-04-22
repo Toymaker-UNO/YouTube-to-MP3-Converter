@@ -7,7 +7,7 @@ import traceback
 
 class Log:
     # 클래스 레벨 상수
-    DEFAULT_LOG_FILE = 'youtube_to_mp3.log.txt'
+    DEFAULT_LOG_FILE = 'log.txt'
     DEFAULT_MAX_SIZE = 10 * 1024 * 1024  # 10MB
     DEFAULT_BACKUP_COUNT = 2
     DEFAULT_ENCODING = 'utf-8'
@@ -44,11 +44,12 @@ class Log:
             log_level (str): 로그 레벨 (기본값: 'DEBUG')
                               가능한 값: 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'
         """
-        if self._initialized:
-            self.error("로깅 시스템이 이미 초기화되어 있습니다. 재초기화는 지원하지 않습니다.")
-            return
-        self._initialized = True
-            
+        # 기존 핸들러 제거
+        if hasattr(self, 'logger'):
+            for handler in self.logger.handlers[:]:
+                self.logger.removeHandler(handler)
+                handler.close()
+        
         # 로그 파일 경로 설정
         self.DEFAULT_LOG_FILE = log_file
         self.DEFAULT_MAX_SIZE = max_size_mb * 1024 * 1024
@@ -66,7 +67,7 @@ class Log:
         self.DEFAULT_LEVEL = level_map.get(log_level.upper(), logging.DEBUG)
         
         # 로거 설정
-        self.logger = logging.getLogger('youtube_to_mp3')
+        self.logger = logging.getLogger('default_logger')
         self.logger.setLevel(self.DEFAULT_LEVEL)
         
         # 파일 핸들러 설정

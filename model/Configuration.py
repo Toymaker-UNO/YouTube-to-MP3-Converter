@@ -3,9 +3,8 @@ from typing import Dict, Any
 
 class Configuration:
     _instance = None
-    _config: Dict[str, Any] = {}
-    _initialized = False
-    _config_file: str = ""
+    _config: Dict[str, Any] = None
+    _config_file: str = None
     
     # 필수 설정 키 목록
     _required_keys = {
@@ -40,6 +39,8 @@ class Configuration:
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(Configuration, cls).__new__(cls)
+            cls._instance._config = {}
+            cls._instance._config_file = None
         return cls._instance
     
     def __init__(self):
@@ -56,11 +57,8 @@ class Configuration:
             json.JSONDecodeError: 설정 파일이 유효한 JSON 형식이 아닌 경우
             ValueError: 필수 설정이 누락되었거나 타입이 맞지 않는 경우
         """
-        if self._initialized:
-            print("이미 초기화가 완료되었습니다.")
-            return
-        
-        self._initialized = True
+        # 내부 변수 초기화
+        self._config = {}
         self._config_file = config_file
         
         try:
