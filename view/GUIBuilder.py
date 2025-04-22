@@ -182,6 +182,10 @@ class GUIBuilder:
         """
         button = QPushButton()
         
+        # ID 설정
+        if 'id' in config:
+            button.setObjectName(config['id'])
+        
         # 스타일 설정
         button.setStyleSheet(self._json_to_css(config['stylesheet']))
         
@@ -209,6 +213,10 @@ class GUIBuilder:
             QLineEdit: 생성된 라인 에딧 위젯
         """
         line_edit = QLineEdit()
+        
+        # ID 설정
+        if 'id' in config:
+            line_edit.setObjectName(config['id'])
         
         # 스타일 설정
         line_edit.setStyleSheet(self._json_to_css(config['stylesheet']))

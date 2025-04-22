@@ -1,6 +1,7 @@
 import sys
 from view.View import view_instance
 from model.Model import model_instance
+from controller.Controller import controller_instance
 
 def main():
     # Model 초기화
@@ -8,6 +9,9 @@ def main():
     
     # View 초기화 및 GUI 실행
     app, window = view_instance.initialize()
+
+    # Controller 초기화
+    controller_instance.initialize(window)
     
     # 애플리케이션 실행
     sys.exit(app.exec_())
