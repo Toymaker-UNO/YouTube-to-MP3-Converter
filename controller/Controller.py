@@ -1,7 +1,11 @@
 from PyQt5.QtWidgets import QMainWindow, QPushButton, QLineEdit, QApplication, QPlainTextEdit, QComboBox
 from PyQt5.QtGui import QClipboard
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QTimer
 from controller.Converter import Converter
+
+
+# 전역 상수 정의
+URL_CHECK_DELAY_MS = 1000  # URL 검사 타이머 지연 시간 (밀리초)
 
 
 class Controller:
@@ -51,21 +55,37 @@ class Controller:
         # URL 입력 변경 이벤트 연결
         url_input = self._window.findChild(QLineEdit, "url_input")
         if url_input:
-            url_input.textChanged.connect(self._handle_url_changed)
+            # 타이머 설정
+            self._url_check_timer = QTimer()
+            self._url_check_timer.setSingleShot(True)
+            self._url_check_timer.timeout.connect(lambda: self._check_url(url_input.text()))
+            
+            # 타이핑 이벤트 연결
+            url_input.textChanged.connect(self._handle_url_typing)
+            # 엔터키 이벤트 연결
+            url_input.returnPressed.connect(lambda: self._check_url(url_input.text()))
         else:
             print("Warning: url_input not found")
 
+    def _handle_url_typing(self, text):
+        """URL 입력 중 타이핑 이벤트 핸들러"""
+        # 타이머 재시작
+        self._url_check_timer.stop()
+        self._url_check_timer.start(URL_CHECK_DELAY_MS)  # 설정된 지연 시간 후에 검사
+
     def _handle_paste_button_click(self):
-        """클립보드의 내용을 URL 입력창에 붙여넣습니다."""
+        """클립보드의 내용을 URL 입력창에 붙여넣고 검사합니다."""
         url_input = self._window.findChild(QLineEdit, "url_input")
         if url_input:
             clipboard_text = self._clipboard.text()
             url_input.setText(clipboard_text)
+            # 붙여넣기 후 즉시 검사
+            self._check_url(clipboard_text)
         else:
             print("Warning: url_input not found")
 
-    def _handle_url_changed(self, text):
-        """URL 입력이 변경될 때 호출되는 핸들러"""
+    def _check_url(self, text):
+        """URL을 검사하고 결과에 따라 UI를 업데이트합니다."""
         log_display = self._window.findChild(QPlainTextEdit, "log_display")
         quality_combo = self._window.findChild(QComboBox, "quality_combo")
         download_button = self._window.findChild(QPushButton, "download_button")
