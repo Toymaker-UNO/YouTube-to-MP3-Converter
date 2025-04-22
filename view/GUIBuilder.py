@@ -366,6 +366,10 @@ class GUIBuilder:
         """개별 QPlainTextEdit 위젯을 생성하고 설정합니다."""
         edit = QPlainTextEdit()
         
+        # ID 설정
+        if 'id' in edit_config:
+            edit.setObjectName(edit_config['id'])
+        
         # 위치 설정
         if 'position' in edit_config:
             pos = edit_config['position']

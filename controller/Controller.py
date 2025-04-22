@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QMainWindow, QPushButton, QLineEdit, QApplication
+from PyQt5.QtWidgets import QMainWindow, QPushButton, QLineEdit, QApplication, QPlainTextEdit
 from PyQt5.QtGui import QClipboard
 from PyQt5.QtCore import Qt
 
@@ -25,6 +25,17 @@ class Controller:
             self._clipboard = QApplication.clipboard()
             self._setup_event_handlers()
             self._initialized = True
+            
+            # 로그 디스플레이 초기화
+            self._initialize_log_display()
+
+    def _initialize_log_display(self):
+        """로그 디스플레이를 초기화하고 초기 메시지를 출력합니다."""
+        log_display = self._window.findChild(QPlainTextEdit, "log_display")
+        if log_display:
+            log_display.setPlainText("URL입력을 기다리고 있습니다.")
+        else:
+            print("Warning: log_display not found")
 
     def _setup_event_handlers(self):
         """이벤트 핸들러를 설정합니다."""
