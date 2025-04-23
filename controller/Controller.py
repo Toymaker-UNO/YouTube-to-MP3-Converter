@@ -78,7 +78,7 @@ class DownloadThread(QThread):
             def on_progress(percentage):
                 # 프로그레스 바 생성 (20칸)
                 progress_length = 20
-                filled = int(percentage * progress_length / 100)
+                filled = int((percentage * (progress_length - 1)) / 100)  # 최대 19칸
                 progress_bar = '=' * filled + '>' + ' ' * (progress_length - filled - 1)
                 self.progress_updated.emit(f"[{progress_bar}] {percentage}%  ({self.current_speed})")
                 
