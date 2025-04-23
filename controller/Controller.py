@@ -70,15 +70,20 @@ class DownloadThread(QThread):
         self.url = url
         self.quality = quality
         self.converter = converter
+        self.current_speed = "0.0 MB/s"
         
     def run(self):
         try:
             # 진행 상황 콜백 함수
             def on_progress(percentage):
-                self.progress_updated.emit(f"다운로드 진행률: {percentage}%")
+                # 프로그레스 바 생성 (20칸)
+                progress_length = 20
+                filled = int(percentage * progress_length / 100)
+                progress_bar = '=' * filled + '>' + ' ' * (progress_length - filled - 1)
+                self.progress_updated.emit(f"다운로드: [{progress_bar}] {percentage}%  ({self.current_speed})")
                 
             def on_speed(speed):
-                self.speed_updated.emit(f"다운로드 속도: {speed}")
+                self.current_speed = speed
                 
             # 다운로드
             self.progress_updated.emit("다운로드를 시작합니다...")
