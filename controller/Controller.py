@@ -80,13 +80,15 @@ class DownloadThread(QThread):
                 progress_length = 20
                 filled = int(percentage * progress_length / 100)
                 progress_bar = '=' * filled + '>' + ' ' * (progress_length - filled - 1)
-                self.progress_updated.emit(f"다운로드: [{progress_bar}] {percentage}%  ({self.current_speed})")
+                self.progress_updated.emit(f"[{progress_bar}] {percentage}%  ({self.current_speed})")
                 
             def on_speed(speed):
                 self.current_speed = speed
                 
-            # 다운로드
+            # 다운로드 시작 메시지
             self.progress_updated.emit("다운로드를 시작합니다...")
+            
+            # 다운로드
             downloaded_file, title = self.converter.download_video(
                 url=self.url,
                 quality=self.quality,
@@ -128,6 +130,20 @@ class Controller:
         if log_display:
             timestamp = self._get_timestamp()
             current_text = log_display.toPlainText()
+            
+            # 프로그레스바 메시지인 경우
+            if message.startswith("[") and ">" in message:
+                if current_text:
+                    lines = current_text.split('\n')
+                    # 마지막 줄이 프로그레스바인 경우 업데이트
+                    if lines[-1].startswith("["):
+                        # 기존 타임스탬프 유지
+                        old_timestamp = lines[-1].split(']')[0] + ']'
+                        lines[-1] = f"{old_timestamp} 다운로드: {message}"
+                        log_display.setPlainText('\n'.join(lines))
+                        return
+                    
+            # 일반 메시지인 경우 새 줄에 추가
             if current_text:
                 log_display.setPlainText(f"{current_text}\n{timestamp} {message}")
             else:
