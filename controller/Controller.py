@@ -152,9 +152,62 @@ class Controller:
 
     def _handle_download_button_click(self):
         """다운로드 버튼 클릭 이벤트 핸들러"""
-        log_display = self._window.findChild(QPlainTextEdit, "log_display")
-        if log_display:
-            log_display.setPlainText("다운로드를 시작합니다")
+        try:
+            # URL 입력값 가져오기
+            url_input = self._window.findChild(QLineEdit, "url_input")
+            if not url_input:
+                raise Exception("URL 입력창을 찾을 수 없습니다.")
+                
+            url = url_input.text().strip()
+            if not url:
+                raise Exception("URL을 입력해주세요.")
+                
+            # 품질 설정 가져오기
+            quality_combo = self._window.findChild(QComboBox, "quality_combo")
+            if not quality_combo:
+                raise Exception("품질 설정을 찾을 수 없습니다.")
+                
+            quality = quality_combo.currentText()
+            
+            # 로그 디스플레이 업데이트
+            log_display = self._window.findChild(QPlainTextEdit, "log_display")
+            if log_display:
+                log_display.setPlainText("다운로드를 시작합니다...")
+                
+            # 진행 상황 콜백 함수
+            def on_progress(percentage):
+                if log_display:
+                    log_display.setPlainText(f"다운로드 진행률: {percentage}%")
+                    
+            def on_speed(speed):
+                if log_display:
+                    current_text = log_display.toPlainText()
+                    log_display.setPlainText(f"{current_text}\n다운로드 속도: {speed}")
+                    
+            # 다운로드 및 변환
+            downloaded_file, title = self._converter.download_video(
+                url=url,
+                quality=quality,
+                progress_callback=on_progress,
+                speed_callback=on_speed
+            )
+            
+            if log_display:
+                log_display.setPlainText("MP3 변환을 시작합니다...")
+                
+            final_path = self._converter.convert_to_mp3(
+                input_file=downloaded_file,
+                title=title,
+                quality=quality
+            )
+            
+            if log_display:
+                log_display.setPlainText(f"변환이 완료되었습니다!\n저장 경로: {final_path}")
+                
+        except Exception as e:
+            log_display = self._window.findChild(QPlainTextEdit, "log_display")
+            if log_display:
+                log_display.setPlainText(f"오류가 발생했습니다: {str(e)}")
 
     def _check_url(self, text):
         """URL을 검사하고 결과에 따라 UI를 업데이트합니다."""

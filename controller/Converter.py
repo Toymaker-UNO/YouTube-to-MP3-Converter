@@ -9,7 +9,17 @@ from model.Log import Log
 class Converter:
     def __init__(self, ffmpeg_path=None, save_path=None):
         self.ffmpeg_path = ffmpeg_path or "ffmpeg"  # 시스템 PATH에서 ffmpeg를 찾음
-        self.save_path = save_path
+        
+        # 저장 경로 설정
+        if save_path is None:
+            self.save_path = os.path.join(os.getcwd(), 'downloads')
+        else:
+            self.save_path = save_path
+            
+        # 저장 경로가 없으면 생성
+        if not os.path.exists(self.save_path):
+            os.makedirs(self.save_path)
+            
         self.log = Log()
         
     def is_valid_youtube_url(self, url):
