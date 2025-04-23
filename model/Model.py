@@ -14,7 +14,7 @@ class Model:
     def __init__(self):
         pass
     
-    def initialize(self, config_path):
+    def run(self, config_path):
         configuration_instance.initialize(config_path)
         
         # 로깅 설정 가져오기

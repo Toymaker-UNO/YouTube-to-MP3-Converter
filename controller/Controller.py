@@ -47,7 +47,7 @@ class Controller:
             cls._instance._initialized = False
         return cls._instance
 
-    def initialize(self, window: QMainWindow):
+    def run(self, window: QMainWindow):
         """
         컨트롤러를 초기화하고 이벤트 핸들러를 설정합니다.
         
