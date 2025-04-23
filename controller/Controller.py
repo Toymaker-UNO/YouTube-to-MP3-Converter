@@ -82,6 +82,13 @@ class Controller:
         else:
             print("Warning: paste_button not found")
 
+        # Download 버튼 클릭 이벤트 연결
+        download_button = self._window.findChild(QPushButton, "download_button")
+        if download_button:
+            download_button.clicked.connect(self._handle_download_button_click)
+        else:
+            print("Warning: download_button not found")
+
         # URL 입력 변경 이벤트 연결
         url_input = self._window.findChild(QLineEdit, "url_input")
         if url_input:
@@ -142,6 +149,12 @@ class Controller:
             self._check_url(clipboard_text)
         else:
             print("Warning: url_input not found")
+
+    def _handle_download_button_click(self):
+        """다운로드 버튼 클릭 이벤트 핸들러"""
+        log_display = self._window.findChild(QPlainTextEdit, "log_display")
+        if log_display:
+            log_display.setPlainText("다운로드를 시작합니다")
 
     def _check_url(self, text):
         """URL을 검사하고 결과에 따라 UI를 업데이트합니다."""
