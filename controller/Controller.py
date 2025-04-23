@@ -111,25 +111,26 @@ class Controller:
         log_display = self._window.findChild(QPlainTextEdit, "log_display")
         if log_display:
             timestamp = self._get_timestamp()
-            current_text = log_display.toPlainText()
             
             # 프로그레스바 메시지인 경우
             if message.startswith("[") and ">" in message:
+                current_text = log_display.toPlainText()
                 if current_text:
                     lines = current_text.split('\n')
                     # 마지막 줄이 프로그레스바인 경우 업데이트
                     if lines[-1].startswith("["):
                         # 기존 타임스탬프 유지
                         old_timestamp = lines[-1].split(']')[0] + ']'
-                        lines[-1] = f"{old_timestamp} 다운로드: {message}"
-                        log_display.setPlainText('\n'.join(lines))
+                        log_display.setPlainText('\n'.join(lines[:-1]))  # 마지막 줄 제거
+                        log_display.appendPlainText(f"{old_timestamp} 다운로드: {message}")
                         return
                     
             # 일반 메시지인 경우 새 줄에 추가
-            if current_text:
-                log_display.setPlainText(f"{current_text}\n{timestamp} {message}")
-            else:
-                log_display.setPlainText(f"{timestamp} {message}")
+            log_display.appendPlainText(f"{timestamp} {message}")
+            
+            # 스크롤을 가장 아래로 내림
+            scrollbar = log_display.verticalScrollBar()
+            scrollbar.setValue(scrollbar.maximum())
 
     def run(self, window: QMainWindow):
         """
@@ -152,6 +153,11 @@ class Controller:
 
     def _initialize_log_display(self):
         """로그 디스플레이를 초기화하고 초기 메시지를 출력합니다."""
+        log_display = self._window.findChild(QPlainTextEdit, "log_display")
+        if log_display:
+            # 가로 스크롤바의 rangeChanged 시그널 연결
+            h_scrollbar = log_display.horizontalScrollBar()
+            h_scrollbar.rangeChanged.connect(self._handle_horizontal_scroll_range)
         self._update_log("URL입력을 기다리고 있습니다.")
 
     def _setup_event_handlers(self):
@@ -309,6 +315,21 @@ class Controller:
             
         if download_button:
             download_button.setEnabled(success)
+
+    def _handle_horizontal_scroll_range(self, min_val, max_val):
+        """가로 스크롤바의 range 변화 이벤트 핸들러"""
+        log_display = self._window.findChild(QPlainTextEdit, "log_display")
+        if log_display:
+            # max_val이 0보다 크면 가로 스크롤바가 필요하다는 의미
+            if max_val > 0:
+                # 다음 이벤트 루프에서 실행되도록 QTimer 사용
+                QTimer.singleShot(0, lambda: self._scroll_to_bottom(log_display))
+
+    def _scroll_to_bottom(self, log_display):
+        """세로 스크롤바를 가장 아래로 내림"""
+        v_scrollbar = log_display.verticalScrollBar()
+        if v_scrollbar.isVisible():
+            v_scrollbar.setValue(v_scrollbar.maximum())
 
     def __del__(self):
         """소멸자"""
