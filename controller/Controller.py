@@ -80,7 +80,8 @@ class DownloadThread(QThread):
                 progress_length = 20
                 filled = int((percentage * (progress_length - 1)) / 100)  # 최대 19칸
                 progress_bar = '=' * filled + '>' + ' ' * (progress_length - filled - 1)
-                self.progress_updated.emit(f"[{progress_bar}] {percentage}%  ({self.current_speed})")
+                # 퍼센트와 속도 표시 위치 고정 (속도는 최대 12자리까지 허용)
+                self.progress_updated.emit(f"[{progress_bar}] {percentage:3}%  ({self.current_speed:>12})")
                 
             def on_speed(speed):
                 self.current_speed = speed
