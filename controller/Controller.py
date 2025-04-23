@@ -10,6 +10,25 @@ from datetime import datetime
 URL_CHECK_DELAY_MS = 1000  # URL 검사 타이머 지연 시간 (밀리초)
 
 
+class ScrollThread(QThread):
+    """스크롤바를 제어하는 스레드"""
+    def __init__(self, log_display):
+        super().__init__()
+        self.log_display = log_display
+        self.running = True
+        
+    def run(self):
+        while self.running:
+            if self.log_display:
+                scrollbar = self.log_display.verticalScrollBar()
+                if scrollbar:
+                    scrollbar.setValue(scrollbar.maximum())
+            self.msleep(100)  # 100ms마다 스크롤 위치 확인
+            
+    def stop(self):
+        self.running = False
+
+
 class URLCheckThread(QThread):
     """URL 검사와 제목 가져오기를 처리하는 스레드"""
     result_ready = pyqtSignal(str, bool)  # (제목 또는 메시지, 성공 여부)
@@ -108,11 +127,6 @@ class Controller:
                 log_display.setPlainText(f"{current_text}\n{timestamp} {message}")
             else:
                 log_display.setPlainText(f"{timestamp} {message}")
-                
-            # 텍스트 설정이 완료된 후에 스크롤바를 최하단으로 이동
-            QTimer.singleShot(0, lambda: log_display.verticalScrollBar().setValue(
-                log_display.verticalScrollBar().maximum()
-            ))
 
     def run(self, window: QMainWindow):
         """
@@ -127,11 +141,18 @@ class Controller:
             self._converter = Converter()
             self._url_check_thread = None
             self._download_thread = None
+            self._scroll_thread = None
             self._setup_event_handlers()
             self._initialized = True
             
             # 로그 디스플레이 초기화
             self._initialize_log_display()
+            
+            # 스크롤 스레드 시작
+            log_display = self._window.findChild(QPlainTextEdit, "log_display")
+            if log_display:
+                self._scroll_thread = ScrollThread(log_display)
+                self._scroll_thread.start()
 
     def _initialize_log_display(self):
         """로그 디스플레이를 초기화하고 초기 메시지를 출력합니다."""
@@ -292,6 +313,12 @@ class Controller:
             
         if download_button:
             download_button.setEnabled(success)
+
+    def __del__(self):
+        """소멸자에서 스크롤 스레드 정리"""
+        if self._scroll_thread:
+            self._scroll_thread.stop()
+            self._scroll_thread.wait()
 
 
 # 싱글톤 인스턴스 생성
