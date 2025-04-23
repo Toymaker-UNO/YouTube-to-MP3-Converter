@@ -174,9 +174,6 @@ class Controller:
         if download_button:
             download_button.setEnabled(False)
             
-        # 로그 디스플레이에 메시지 표시
-        self._update_log("URL을 검사하는 중...")
-            
         # 타이머 재시작
         self._url_check_timer.stop()
         self._url_check_timer.start(URL_CHECK_DELAY_MS)  # 설정된 지연 시간 후에 검사
@@ -185,8 +182,11 @@ class Controller:
         """클립보드의 내용을 URL 입력창에 붙여넣고 검사합니다."""
         url_input = self._window.findChild(QLineEdit, "url_input")
         if url_input:
+            # textChanged 시그널을 일시적으로 차단
+            url_input.blockSignals(True)
             clipboard_text = self._clipboard.text()
             url_input.setText(clipboard_text)
+            url_input.blockSignals(False)
             
             # quality_combo와 download_button 비활성화
             quality_combo = self._window.findChild(QComboBox, "quality_combo", Qt.FindChildrenRecursively)
@@ -196,9 +196,6 @@ class Controller:
                 quality_combo.setEnabled(False)
             if download_button:
                 download_button.setEnabled(False)
-                
-            # 로그 디스플레이에 메시지 표시
-            self._update_log("URL을 검사하는 중...")
                 
             # 붙여넣기 후 즉시 검사
             self._check_url(clipboard_text)
@@ -268,13 +265,13 @@ class Controller:
             self._url_check_thread.terminate()
             self._url_check_thread.wait()
             
+        # 로그 디스플레이에 검사 중 메시지 표시
+        self._update_log("URL을 검사하는 중...")
+            
         # 새 스레드 생성 및 시작
         self._url_check_thread = URLCheckThread(text, self._converter)
         self._url_check_thread.result_ready.connect(self._handle_url_check_result)
         self._url_check_thread.start()
-        
-        # 로그 디스플레이에 검사 중 메시지 표시
-        self._update_log("URL을 검사하는 중...")
 
     def _handle_url_check_result(self, message, success):
         """URL 검사 결과를 처리합니다."""
