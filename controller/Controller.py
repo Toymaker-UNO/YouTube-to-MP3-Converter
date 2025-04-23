@@ -2,6 +2,8 @@ from PyQt5.QtWidgets import QMainWindow, QPushButton, QLineEdit, QApplication, Q
 from PyQt5.QtGui import QClipboard
 from PyQt5.QtCore import Qt, QTimer, QThread, pyqtSignal
 from controller.Converter import Converter
+import os
+from datetime import datetime
 
 
 # 전역 상수 정의
@@ -47,6 +49,21 @@ class Controller:
             cls._instance._initialized = False
         return cls._instance
 
+    def _get_timestamp(self):
+        """현재 시간을 [HH:MM:SS] 형식으로 반환합니다."""
+        return datetime.now().strftime("[%H:%M:%S]")
+
+    def _update_log(self, message):
+        """로그 디스플레이에 시간이 포함된 메시지를 출력합니다."""
+        log_display = self._window.findChild(QPlainTextEdit, "log_display")
+        if log_display:
+            timestamp = self._get_timestamp()
+            current_text = log_display.toPlainText()
+            if current_text:
+                log_display.setPlainText(f"{current_text}\n{timestamp} {message}")
+            else:
+                log_display.setPlainText(f"{timestamp} {message}")
+
     def run(self, window: QMainWindow):
         """
         컨트롤러를 초기화하고 이벤트 핸들러를 설정합니다.
@@ -67,11 +84,7 @@ class Controller:
 
     def _initialize_log_display(self):
         """로그 디스플레이를 초기화하고 초기 메시지를 출력합니다."""
-        log_display = self._window.findChild(QPlainTextEdit, "log_display")
-        if log_display:
-            log_display.setPlainText("URL입력을 기다리고 있습니다.")
-        else:
-            print("Warning: log_display not found")
+        self._update_log("URL입력을 기다리고 있습니다.")
 
     def _setup_event_handlers(self):
         """이벤트 핸들러를 설정합니다."""
@@ -116,9 +129,7 @@ class Controller:
             download_button.setEnabled(False)
             
         # 로그 디스플레이에 메시지 표시
-        log_display = self._window.findChild(QPlainTextEdit, "log_display")
-        if log_display:
-            log_display.setPlainText("URL을 검사하는 중...")
+        self._update_log("URL을 검사하는 중...")
             
         # 타이머 재시작
         self._url_check_timer.stop()
@@ -141,9 +152,7 @@ class Controller:
                 download_button.setEnabled(False)
                 
             # 로그 디스플레이에 메시지 표시
-            log_display = self._window.findChild(QPlainTextEdit, "log_display")
-            if log_display:
-                log_display.setPlainText("URL을 검사하는 중...")
+            self._update_log("URL을 검사하는 중...")
                 
             # 붙여넣기 후 즉시 검사
             self._check_url(clipboard_text)
@@ -170,19 +179,14 @@ class Controller:
             quality = quality_combo.currentText()
             
             # 로그 디스플레이 업데이트
-            log_display = self._window.findChild(QPlainTextEdit, "log_display")
-            if log_display:
-                log_display.setPlainText("다운로드를 시작합니다...")
+            self._update_log("다운로드를 시작합니다...")
                 
             # 진행 상황 콜백 함수
             def on_progress(percentage):
-                if log_display:
-                    log_display.setPlainText(f"다운로드 진행률: {percentage}%")
+                self._update_log(f"다운로드 진행률: {percentage}%")
                     
             def on_speed(speed):
-                if log_display:
-                    current_text = log_display.toPlainText()
-                    log_display.setPlainText(f"{current_text}\n다운로드 속도: {speed}")
+                self._update_log(f"다운로드 속도: {speed}")
                     
             # 다운로드 및 변환
             downloaded_file, title = self._converter.download_video(
@@ -192,8 +196,7 @@ class Controller:
                 speed_callback=on_speed
             )
             
-            if log_display:
-                log_display.setPlainText("MP3 변환을 시작합니다...")
+            self._update_log("MP3 변환을 시작합니다...")
                 
             final_path = self._converter.convert_to_mp3(
                 input_file=downloaded_file,
@@ -201,13 +204,10 @@ class Controller:
                 quality=quality
             )
             
-            if log_display:
-                log_display.setPlainText(f"변환이 완료되었습니다!\n저장 경로: {final_path}")
+            self._update_log(f"변환이 완료되었습니다!\n저장 경로: {final_path}")
                 
         except Exception as e:
-            log_display = self._window.findChild(QPlainTextEdit, "log_display")
-            if log_display:
-                log_display.setPlainText(f"오류가 발생했습니다: {str(e)}")
+            self._update_log(f"오류가 발생했습니다: {str(e)}")
 
     def _check_url(self, text):
         """URL을 검사하고 결과에 따라 UI를 업데이트합니다."""
@@ -222,9 +222,7 @@ class Controller:
         self._url_check_thread.start()
         
         # 로그 디스플레이에 검사 중 메시지 표시
-        log_display = self._window.findChild(QPlainTextEdit, "log_display")
-        if log_display:
-            log_display.setPlainText("URL을 검사하는 중...")
+        self._update_log("URL을 검사하는 중...")
 
     def _handle_url_check_result(self, message, success):
         """URL 검사 결과를 처리합니다."""
@@ -233,7 +231,7 @@ class Controller:
         download_button = self._window.findChild(QPushButton, "download_button")
         
         if log_display:
-            log_display.setPlainText(message)
+            self._update_log(message)
             
         if quality_combo:
             quality_combo.setEnabled(success)
