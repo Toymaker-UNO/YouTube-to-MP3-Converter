@@ -39,6 +39,51 @@ class URLCheckThread(QThread):
             self.result_ready.emit(f"오류 발생: {str(e)}", False)
 
 
+class DownloadThread(QThread):
+    """다운로드와 변환 작업을 처리하는 스레드"""
+    progress_updated = pyqtSignal(str)  # 진행 상황 메시지
+    speed_updated = pyqtSignal(str)     # 다운로드 속도
+    download_completed = pyqtSignal(str)  # 완료 메시지
+    error_occurred = pyqtSignal(str)    # 오류 메시지
+    
+    def __init__(self, url, quality, converter):
+        super().__init__()
+        self.url = url
+        self.quality = quality
+        self.converter = converter
+        
+    def run(self):
+        try:
+            # 진행 상황 콜백 함수
+            def on_progress(percentage):
+                self.progress_updated.emit(f"다운로드 진행률: {percentage}%")
+                
+            def on_speed(speed):
+                self.speed_updated.emit(f"다운로드 속도: {speed}")
+                
+            # 다운로드
+            self.progress_updated.emit("다운로드를 시작합니다...")
+            downloaded_file, title = self.converter.download_video(
+                url=self.url,
+                quality=self.quality,
+                progress_callback=on_progress,
+                speed_callback=on_speed
+            )
+            
+            # MP3 변환
+            self.progress_updated.emit("MP3 변환을 시작합니다...")
+            final_path = self.converter.convert_to_mp3(
+                input_file=downloaded_file,
+                title=title,
+                quality=self.quality
+            )
+            
+            self.download_completed.emit(f"변환이 완료되었습니다!\n저장 경로: {final_path}")
+            
+        except Exception as e:
+            self.error_occurred.emit(f"오류가 발생했습니다: {str(e)}")
+
+
 class Controller:
     """컨트롤러 클래스의 싱글톤 구현"""
     _instance = None
@@ -76,6 +121,7 @@ class Controller:
             self._clipboard = QApplication.clipboard()
             self._converter = Converter()
             self._url_check_thread = None
+            self._download_thread = None
             self._setup_event_handlers()
             self._initialized = True
             
@@ -178,36 +224,42 @@ class Controller:
                 
             quality = quality_combo.currentText()
             
-            # 로그 디스플레이 업데이트
-            self._update_log("다운로드를 시작합니다...")
+            # 이전 다운로드 스레드가 실행 중이면 중지
+            if self._download_thread and self._download_thread.isRunning():
+                self._download_thread.terminate()
+                self._download_thread.wait()
                 
-            # 진행 상황 콜백 함수
-            def on_progress(percentage):
-                self._update_log(f"다운로드 진행률: {percentage}%")
-                    
-            def on_speed(speed):
-                self._update_log(f"다운로드 속도: {speed}")
-                    
-            # 다운로드 및 변환
-            downloaded_file, title = self._converter.download_video(
-                url=url,
-                quality=quality,
-                progress_callback=on_progress,
-                speed_callback=on_speed
-            )
-            
-            self._update_log("MP3 변환을 시작합니다...")
+            # 다운로드 버튼 비활성화
+            download_button = self._window.findChild(QPushButton, "download_button")
+            if download_button:
+                download_button.setEnabled(False)
                 
-            final_path = self._converter.convert_to_mp3(
-                input_file=downloaded_file,
-                title=title,
-                quality=quality
-            )
-            
-            self._update_log(f"변환이 완료되었습니다!\n저장 경로: {final_path}")
+            # 새 다운로드 스레드 생성 및 시작
+            self._download_thread = DownloadThread(url, quality, self._converter)
+            self._download_thread.progress_updated.connect(self._update_log)
+            self._download_thread.speed_updated.connect(self._update_log)
+            self._download_thread.download_completed.connect(self._handle_download_completed)
+            self._download_thread.error_occurred.connect(self._handle_download_error)
+            self._download_thread.start()
                 
         except Exception as e:
             self._update_log(f"오류가 발생했습니다: {str(e)}")
+            
+    def _handle_download_completed(self, message):
+        """다운로드 완료 이벤트 핸들러"""
+        self._update_log(message)
+        # 다운로드 버튼 활성화
+        download_button = self._window.findChild(QPushButton, "download_button")
+        if download_button:
+            download_button.setEnabled(True)
+            
+    def _handle_download_error(self, message):
+        """다운로드 오류 이벤트 핸들러"""
+        self._update_log(message)
+        # 다운로드 버튼 활성화
+        download_button = self._window.findChild(QPushButton, "download_button")
+        if download_button:
+            download_button.setEnabled(True)
 
     def _check_url(self, text):
         """URL을 검사하고 결과에 따라 UI를 업데이트합니다."""
