@@ -108,6 +108,11 @@ class Controller:
                 log_display.setPlainText(f"{current_text}\n{timestamp} {message}")
             else:
                 log_display.setPlainText(f"{timestamp} {message}")
+                
+            # 텍스트 설정이 완료된 후에 스크롤바를 최하단으로 이동
+            QTimer.singleShot(0, lambda: log_display.verticalScrollBar().setValue(
+                log_display.verticalScrollBar().maximum()
+            ))
 
     def run(self, window: QMainWindow):
         """
