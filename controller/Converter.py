@@ -5,6 +5,7 @@ import os
 import time
 import ffmpeg
 from model.Log import Log
+import subprocess
 
 class Converter:
     def __init__(self, ffmpeg_path=None, save_path=None):
@@ -128,20 +129,67 @@ class Converter:
             # 임시 MP3 파일 경로
             temp_mp3 = os.path.join(self.save_path, f"temp_{int(datetime.now().timestamp())}.mp3")
             
-            # ffmpeg-python을 사용하여 변환
-            stream = ffmpeg.input(input_file)
-            stream = ffmpeg.output(
-                stream,
-                temp_mp3,
-                acodec='libmp3lame',
-                audio_bitrate=f'{quality_map[quality]}k',
-                loglevel='error'
+            # ffmpeg 명령어 구성
+            cmd = [
+                self.ffmpeg_path,
+                '-i', input_file,
+                '-progress', 'pipe:1',
+                '-f', 'mp3',
+                '-acodec', 'libmp3lame',
+                '-ab', f'{quality_map[quality]}k',
+                '-loglevel', 'info',  # 로그 레벨을 info로 설정
+                temp_mp3
+            ]
+            
+            # subprocess로 ffmpeg 실행
+            process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                universal_newlines=True,
+                bufsize=1  # 버퍼 크기를 1로 설정하여 실시간 출력
             )
             
-            try:
-                ffmpeg.run(stream, capture_stdout=True, capture_stderr=True)
-            except ffmpeg.Error as e:
-                raise Exception(f"FFmpeg 변환 실패: {e.stderr.decode()}")
+            # 전체 시간 가져오기
+            total_duration = None
+            while True:
+                line = process.stderr.readline()  # stderr에서 Duration 정보를 읽음
+                if not line:
+                    break
+                    
+                if 'Duration:' in line:
+                    # Duration: 00:05:23.17 형식에서 시간 추출
+                    duration_str = line.split('Duration:')[1].split(',')[0].strip()
+                    h, m, s = duration_str.split(':')
+                    total_duration = int(h) * 3600 + int(m) * 60 + float(s)
+                    print(f"전체 시간: {total_duration}초")
+                    break
+            
+            # 진행률 정보 출력
+            while True:
+                line = process.stdout.readline()
+                if not line:
+                    break
+                    
+                print(f"원본 출력: {line.strip()}")  # 디버깅을 위한 원본 출력
+                    
+                if '=' in line:
+                    key, value = line.strip().split('=', 1)
+                    if key == 'out_time':
+                        # 시간 정보를 초로 변환
+                        h, m, s = value.split(':')
+                        current_time = int(h) * 3600 + int(m) * 60 + float(s)
+                        
+                        # 진행률 계산
+                        if total_duration:
+                            percentage = (current_time / total_duration) * 100
+                            print(f"진행률: {percentage:.1f}%")
+                
+            # 프로세스 종료 대기
+            process.wait()
+            
+            if process.returncode != 0:
+                raise Exception(f"FFmpeg 변환 실패: {process.stderr.read()}")
                 
             # 최종 파일명으로 변경
             final_filename = f"{title}.mp3"
