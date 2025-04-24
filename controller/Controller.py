@@ -125,12 +125,66 @@ class Controller:
                         log_display.appendPlainText(f"{old_timestamp} 다운로드: {message}")
                         return
                     
-            # 일반 메시지인 경우 새 줄에 추가
-            log_display.appendPlainText(f"{timestamp} {message}")
+            # 일반 메시지인 경우
+            # 타임스탬프 길이 계산 (예: "[HH:MM:SS] " = 11자)
+            timestamp_length = len(timestamp) + 1  # +1은 공백
+            
+            # 창의 실제 너비 계산 (픽셀 단위)
+            viewport_width = log_display.viewport().width()
+            font_metrics = log_display.fontMetrics()
+            
+            # 타임스탬프가 차지하는 픽셀 너비
+            timestamp_pixels = font_metrics.width(timestamp + " ")
+            
+            # 실제 사용 가능한 너비 (픽셀)
+            available_width = viewport_width - timestamp_pixels
+            
+            # 메시지를 적절한 길이로 자동 줄바꿈
+            words = message.split()
+            lines = []
+            current_line = []
+            current_pixels = 0
+            
+            for word in words:
+                # 단어의 픽셀 너비 계산 (한글은 2바이트로 계산)
+                word_pixels = font_metrics.width(word)
+                
+                # 현재 줄에 단어를 추가할 수 있는지 확인
+                if current_line:
+                    # 단어 사이의 공백 고려
+                    space_pixels = font_metrics.width(" ")
+                    if current_pixels + space_pixels + word_pixels <= available_width:
+                        current_line.append(word)
+                        current_pixels += space_pixels + word_pixels
+                    else:
+                        # 현재 줄이 꽉 찼으면 새 줄 시작
+                        lines.append(' '.join(current_line))
+                        current_line = [word]
+                        current_pixels = word_pixels
+                else:
+                    # 첫 번째 단어
+                    current_line.append(word)
+                    current_pixels = word_pixels
+            
+            # 마지막 줄 추가
+            if current_line:
+                lines.append(' '.join(current_line))
+            
+            # 줄바꿈 처리된 메시지 포맷팅
+            formatted_lines = []
+            for i, line in enumerate(lines):
+                if i == 0:
+                    # 첫 번째 줄은 타임스탬프와 함께
+                    formatted_lines.append(f"{timestamp} {line}")
+                else:
+                    # 다음 줄들은 타임스탬프 길이만큼 공백 추가
+                    formatted_lines.append(" " * timestamp_length + line)
+            
+            # 처리된 메시지를 로그에 추가
+            log_display.appendPlainText('\n'.join(formatted_lines))
             
             # 스크롤을 가장 아래로 내림
-            scrollbar = log_display.verticalScrollBar()
-            scrollbar.setValue(scrollbar.maximum())
+            self._scroll_to_bottom(log_display)
 
     def run(self, window: QMainWindow):
         """
@@ -155,9 +209,8 @@ class Controller:
         """로그 디스플레이를 초기화하고 초기 메시지를 출력합니다."""
         log_display = self._window.findChild(QPlainTextEdit, "log_display")
         if log_display:
-            # 가로 스크롤바의 rangeChanged 시그널 연결
-            h_scrollbar = log_display.horizontalScrollBar()
-            h_scrollbar.rangeChanged.connect(self._handle_horizontal_scroll_range)
+            # 가로 스크롤바가 생성되지 않도록 자동 줄바꿈 설정
+            log_display.setLineWrapMode(QPlainTextEdit.WidgetWidth)
         self._update_log("URL입력을 기다리고 있습니다.")
 
     def _setup_event_handlers(self):
@@ -315,15 +368,6 @@ class Controller:
             
         if download_button:
             download_button.setEnabled(success)
-
-    def _handle_horizontal_scroll_range(self, min_val, max_val):
-        """가로 스크롤바의 range 변화 이벤트 핸들러"""
-        log_display = self._window.findChild(QPlainTextEdit, "log_display")
-        if log_display:
-            # max_val이 0보다 크면 가로 스크롤바가 필요하다는 의미
-            if max_val > 0:
-                # 다음 이벤트 루프에서 실행되도록 QTimer 사용
-                QTimer.singleShot(0, lambda: self._scroll_to_bottom(log_display))
 
     def _scroll_to_bottom(self, log_display):
         """세로 스크롤바를 가장 아래로 내림"""
