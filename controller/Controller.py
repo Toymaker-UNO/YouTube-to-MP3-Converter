@@ -123,6 +123,8 @@ class Controller:
                         old_timestamp = lines[-1].split(']')[0] + ']'
                         log_display.setPlainText('\n'.join(lines[:-1]))  # 마지막 줄 제거
                         log_display.appendPlainText(f"{old_timestamp} 다운로드: {message}")
+                        # 프로그레스바 업데이트 후에도 스크롤 적용
+                        self._scroll_to_bottom(log_display)
                         return
                     
             # 일반 메시지인 경우
