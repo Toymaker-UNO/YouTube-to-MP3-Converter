@@ -137,7 +137,7 @@ class Converter:
                 '-f', 'mp3',
                 '-acodec', 'libmp3lame',
                 '-ab', f'{quality_map[quality]}k',
-                '-loglevel', 'info',  # 로그 레벨을 info로 설정
+                '-loglevel', 'info',
                 temp_mp3
             ]
             
@@ -147,13 +147,13 @@ class Converter:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 universal_newlines=True,
-                bufsize=1  # 버퍼 크기를 1로 설정하여 실시간 출력
+                bufsize=1
             )
             
             # 전체 시간 가져오기
             total_duration = None
             while True:
-                line = process.stderr.readline()  # stderr에서 Duration 정보를 읽음
+                line = process.stderr.readline()
                 if not line:
                     break
                     
@@ -162,7 +162,6 @@ class Converter:
                     duration_str = line.split('Duration:')[1].split(',')[0].strip()
                     h, m, s = duration_str.split(':')
                     total_duration = int(h) * 3600 + int(m) * 60 + float(s)
-                    print(f"전체 시간: {total_duration}초")
                     break
             
             # 진행률 정보 출력
@@ -170,8 +169,6 @@ class Converter:
                 line = process.stdout.readline()
                 if not line:
                     break
-                    
-                print(f"원본 출력: {line.strip()}")  # 디버깅을 위한 원본 출력
                     
                 if '=' in line:
                     key, value = line.strip().split('=', 1)
