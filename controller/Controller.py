@@ -135,11 +135,15 @@ class Controller:
             viewport_width = log_display.viewport().width()
             font_metrics = log_display.fontMetrics()
             
+            # 스크롤바의 너비 고려
+            v_scrollbar = log_display.verticalScrollBar()
+            scrollbar_width = v_scrollbar.width() if v_scrollbar.isVisible() else 0
+            
             # 타임스탬프가 차지하는 픽셀 너비
             timestamp_pixels = font_metrics.width(timestamp + " ")
             
             # 실제 사용 가능한 너비 (픽셀)
-            available_width = viewport_width - timestamp_pixels
+            available_width = viewport_width - timestamp_pixels - scrollbar_width
             
             # 메시지를 적절한 길이로 자동 줄바꿈
             words = message.split()
@@ -327,7 +331,16 @@ class Controller:
             
     def _handle_download_completed(self, message):
         """다운로드 완료 이벤트 핸들러"""
-        self._update_log(message)
+        # 메시지를 줄 단위로 분리
+        lines = message.split('\n')
+        for i, line in enumerate(lines):
+            if i == 0:
+                # 첫 번째 줄은 일반 메시지로 처리
+                self._update_log(line)
+            else:
+                # 두 번째 줄부터는 타임스탬프 길이만큼 공백 추가
+                timestamp_length = len(self._get_timestamp()) + 1  # +1은 공백
+                self._update_log(" " * timestamp_length + line)
         # 다운로드 버튼 활성화
         download_button = self._window.findChild(QPushButton, "download_button")
         if download_button:
