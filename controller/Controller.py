@@ -313,10 +313,17 @@ class Controller:
                 self._download_thread.terminate()
                 self._download_thread.wait()
                 
-            # 다운로드 버튼 비활성화
+            # 모든 위젯 비활성화
             download_button = self._window.findChild(QPushButton, "download_button")
+            paste_button = self._window.findChild(QPushButton, "paste_button")
             if download_button:
                 download_button.setEnabled(False)
+            if paste_button:
+                paste_button.setEnabled(False)
+            if url_input:
+                url_input.setEnabled(False)
+            if quality_combo:
+                quality_combo.setEnabled(False)
                 
             # 새 다운로드 스레드 생성 및 시작
             self._download_thread = DownloadThread(url, quality, self._converter)
@@ -341,18 +348,40 @@ class Controller:
                 # 두 번째 줄부터는 타임스탬프 길이만큼 공백 추가
                 timestamp_length = len(self._get_timestamp()) + 1  # +1은 공백
                 self._update_log(" " * timestamp_length + line)
-        # 다운로드 버튼 활성화
+                
+        # 모든 위젯 활성화
         download_button = self._window.findChild(QPushButton, "download_button")
+        paste_button = self._window.findChild(QPushButton, "paste_button")
+        url_input = self._window.findChild(QLineEdit, "url_input")
+        quality_combo = self._window.findChild(QComboBox, "quality_combo")
+        
         if download_button:
             download_button.setEnabled(True)
+        if paste_button:
+            paste_button.setEnabled(True)
+        if url_input:
+            url_input.setEnabled(True)
+        if quality_combo:
+            quality_combo.setEnabled(True)
             
     def _handle_download_error(self, message):
         """다운로드 오류 이벤트 핸들러"""
         self._update_log(message)
-        # 다운로드 버튼 활성화
+        
+        # 모든 위젯 활성화
         download_button = self._window.findChild(QPushButton, "download_button")
+        paste_button = self._window.findChild(QPushButton, "paste_button")
+        url_input = self._window.findChild(QLineEdit, "url_input")
+        quality_combo = self._window.findChild(QComboBox, "quality_combo")
+        
         if download_button:
             download_button.setEnabled(True)
+        if paste_button:
+            paste_button.setEnabled(True)
+        if url_input:
+            url_input.setEnabled(True)
+        if quality_combo:
+            quality_combo.setEnabled(True)
 
     def _check_url(self, text):
         """URL을 검사하고 결과에 따라 UI를 업데이트합니다."""
