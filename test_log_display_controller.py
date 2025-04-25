@@ -13,10 +13,18 @@ def main():
     
     # 테스트 로그 출력
     log_display_controller_instance.initialize(window)
-    log_display_controller_instance.print("테스트 로그 메시지입니다.")
-    log_display_controller_instance.print("테스트 로그 메시지입니다.")
-    log_display_controller_instance.print("테스트 로그 메시지입니다.")
-    
+    log_display_controller_instance.print_next_line("테스트 로그 메시지입니다.")
+    log_display_controller_instance.print_next_line("테스트 로그 메시지입니다.")
+    log_display_controller_instance.print_next_line("테스트 로그 메시지입니다.")
+    log_display_controller_instance.print_next_line("테스트 로그 메시지입니다.")
+    log_display_controller_instance.print_next_line("테스트 로그 메시지입니다.")
+    log_display_controller_instance.print_next_line("테스트 로그 메시지입니다.")
+    log_display_controller_instance.print_next_line("테스트 로그 메시지입니다.")
+    log_display_controller_instance.print_next_line("이것은 아주 긴 테스트 로그 메시지입니다. 이것은 아주 긴 테스트 로그 메시지입니다. 이것은 아주 긴 테스트 로그 메시지입니다. 이것은 아주 긴 테스트 로그 메시지입니다. 이것은 아주 긴 테스트 로그 메시지입니다. 이것은 아주 긴 테스트 로그 메시지입니다. 이것은 아주 긴 테스트 로그 메시지입니다. 이것은 아주 긴 테스트 로그 메시지입니다. 이것은 아주 긴 테스트 로그 메시지입니다. 이것은 아주 긴 테스트 로그 메시지입니다.")
+    log_display_controller_instance.print_current_line("이것은 아주 긴 테스트 로그 메시지입니다222. 이것은 아주 긴 테스트 로그 메시지입니다222. 이것은 아주 긴 테스트 로그 메시지입니다. 이것은 아주 긴 테스트 로그 메시지입니다. 이것은 아주 긴 테스트 로그 메시지입니다. 이것은 아주 긴 테스트 로그 메시지입니다. 이것은 아주 긴 테스트 로그 메시지입니다. 이것은 아주 긴 테스트 로그 메시지입니다. 이것은 아주 긴 테스트 로그 메시지입니다. 이것은 아주 긴 테스트 로그 메시지입니다.")
+    log_display_controller_instance.print_next_line("테스트 로그 메시지입니다.")
+    log_display_controller_instance.print_next_line("테스트 로그 메시지입니다.")
+    log_display_controller_instance.print_current_line("이것은 아주 긴 테스트 로그 메시지입니다222. 이것은 아주 긴 테스트 로그 메시지입니다222. 이것은 아주 긴 테스트 로그 메시지입니다. 이것은 아주 긴 테스트 로그 메시지입니다. 이것은 아주 긴 테스트 로그 메시지입니다. 이것은 아주 긴 테스트 로그 메시지입니다. 이것은 아주 긴 테스트 로그 메시지입니다. 이것은 아주 긴 테스트 로그 메시지입니다. 이것은 아주 긴 테스트 로그 메시지입니다. 이것은 아주 긴 테스트 로그 메시지입니다.")
 
     # 애플리케이션 실행
     sys.exit(app.exec_())
