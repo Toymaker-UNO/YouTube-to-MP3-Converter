@@ -66,7 +66,10 @@ class DownloadThread(QThread):
                 self.current_speed = speed
                 
             def on_convert_progress(percentage):
-                progress_text = "MP3변환: " + log_display_controller_instance.create_progress_bar(percentage)
+                if 100 != percentage:
+                    progress_text = "MP3변환: " + log_display_controller_instance.create_progress_bar(round(percentage, 2))
+                else:
+                    progress_text = "MP3변환: " + log_display_controller_instance.create_progress_bar(100)
                 self.progress_updated.emit(progress_text, True)
                 
             # 다운로드 시작 메시지
