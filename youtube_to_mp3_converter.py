@@ -5,7 +5,7 @@ from controller.Controller import controller_instance
 
 def main():
     # Model 실행행
-    model_instance.run('youtube_to_mp3.config.json')
+    model_instance.run('config.json')
     
     # View 초기화 및 GUI 실행
     app, window = view_instance.run()
