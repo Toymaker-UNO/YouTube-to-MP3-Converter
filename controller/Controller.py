@@ -107,90 +107,7 @@ class Controller:
         return datetime.now().strftime("[%H:%M:%S]")
 
     def _update_log(self, message):
-        """로그 디스플레이에 시간이 포함된 메시지를 출력합니다."""
-        log_display = self._window.findChild(QPlainTextEdit, "log_display")
-        if log_display:
-            timestamp = self._get_timestamp()
-            
-            # 프로그레스바 메시지인 경우
-            if message.startswith("[") and ">" in message:
-                current_text = log_display.toPlainText()
-                if current_text:
-                    lines = current_text.split('\n')
-                    # 마지막 줄이 프로그레스바인 경우 업데이트
-                    if lines[-1].startswith("["):
-                        # 기존 타임스탬프 유지
-                        old_timestamp = lines[-1].split(']')[0] + ']'
-                        log_display.setPlainText('\n'.join(lines[:-1]))  # 마지막 줄 제거
-                        log_display.appendPlainText(f"{old_timestamp} 다운로드: {message}")
-                        # 프로그레스바 업데이트 후에도 스크롤 적용
-                        self._scroll_to_bottom(log_display)
-                        return
-                    
-            # 일반 메시지인 경우
-            # 타임스탬프 길이 계산 (예: "[HH:MM:SS] " = 11자)
-            timestamp_length = len(timestamp) + 1  # +1은 공백
-            
-            # 창의 실제 너비 계산 (픽셀 단위)
-            viewport_width = log_display.viewport().width()
-            font_metrics = log_display.fontMetrics()
-            
-            # 스크롤바의 너비 고려
-            v_scrollbar = log_display.verticalScrollBar()
-            scrollbar_width = v_scrollbar.width() if v_scrollbar.isVisible() else 0
-            
-            # 타임스탬프가 차지하는 픽셀 너비
-            timestamp_pixels = font_metrics.width(timestamp + " ")
-            
-            # 실제 사용 가능한 너비 (픽셀)
-            available_width = viewport_width - timestamp_pixels - scrollbar_width
-            
-            # 메시지를 적절한 길이로 자동 줄바꿈
-            words = message.split()
-            lines = []
-            current_line = []
-            current_pixels = 0
-            
-            for word in words:
-                # 단어의 픽셀 너비 계산 (한글은 2바이트로 계산)
-                word_pixels = font_metrics.width(word)
-                
-                # 현재 줄에 단어를 추가할 수 있는지 확인
-                if current_line:
-                    # 단어 사이의 공백 고려
-                    space_pixels = font_metrics.width(" ")
-                    if current_pixels + space_pixels + word_pixels <= available_width:
-                        current_line.append(word)
-                        current_pixels += space_pixels + word_pixels
-                    else:
-                        # 현재 줄이 꽉 찼으면 새 줄 시작
-                        lines.append(' '.join(current_line))
-                        current_line = [word]
-                        current_pixels = word_pixels
-                else:
-                    # 첫 번째 단어
-                    current_line.append(word)
-                    current_pixels = word_pixels
-            
-            # 마지막 줄 추가
-            if current_line:
-                lines.append(' '.join(current_line))
-            
-            # 줄바꿈 처리된 메시지 포맷팅
-            formatted_lines = []
-            for i, line in enumerate(lines):
-                if i == 0:
-                    # 첫 번째 줄은 타임스탬프와 함께
-                    formatted_lines.append(f"{timestamp} {line}")
-                else:
-                    # 다음 줄들은 타임스탬프 길이만큼 공백 추가
-                    formatted_lines.append(" " * timestamp_length + line)
-            
-            # 처리된 메시지를 로그에 추가
-            log_display.appendPlainText('\n'.join(formatted_lines))
-            
-            # 스크롤을 가장 아래로 내림
-            self._scroll_to_bottom(log_display)
+        log_display_controller_instance.print_next_line(message)
 
     def run(self, window: QMainWindow):
         """
@@ -207,7 +124,8 @@ class Controller:
             self._download_thread = None
             self._setup_event_handlers()
             self._initialized = True
-            
+            log_display_controller_instance.initialize(window)
+
             # 로그 디스플레이 초기화
             self._initialize_log_display()
 
@@ -413,16 +331,25 @@ class Controller:
         if download_button:
             download_button.setEnabled(success)
 
-    def _scroll_to_bottom(self, log_display):
-        """세로 스크롤바를 가장 아래로 내림"""
-        v_scrollbar = log_display.verticalScrollBar()
-        if v_scrollbar.isVisible():
-            v_scrollbar.setValue(v_scrollbar.maximum())
-
     def __del__(self):
         """소멸자"""
         pass
 
+    def _create_progress_bar(self, percentage, progress_length=20):
+        """
+        텍스트 기반 프로그레스 바를 생성합니다.
+        
+        Args:
+            percentage (int): 진행률 (0-100)
+            progress_length (int): 프로그레스 바의 전체 길이 (기본값: 20)
+            current_speed (str): 현재 다운로드 속도 (기본값: "0.0 MB/s")
+        
+        Returns:
+            str: 포맷된 프로그레스 바 문자열
+        """
+        filled = int((percentage * (progress_length - 1)) / 100)  # 최대 progress_length-1칸
+        progress_bar = '=' * filled + '>' + ' ' * (progress_length - filled - 1)
+        return f"[{progress_bar}] {percentage:3}%"
 
 # 싱글톤 인스턴스 생성
 controller_instance = Controller() 
