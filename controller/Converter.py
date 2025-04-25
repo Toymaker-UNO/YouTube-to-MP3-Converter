@@ -23,6 +23,15 @@ class Converter:
             
         self.log = Log()
         
+    def sanitize_filename(self, filename):
+        """파일 이름에서 특수 문자를 제거합니다."""
+        # Windows에서 허용되지 않는 문자들을 제거
+        invalid_chars = r'[<>:"/\\|?*]'
+        sanitized = re.sub(invalid_chars, '_', filename)
+        # 공백을 언더스코어로 대체
+        sanitized = sanitized.replace(' ', '_')
+        return sanitized
+        
     def is_valid_youtube_url(self, url):
         """YouTube URL의 유효성을 검사합니다."""
         youtube_regex = r'(https?://)?(www\.)?(youtube|youtu|youtube-nocookie)\.(com|be)/(watch\?v=|embed/|v/|.+\?v=)?([^"&?/s]{11})'
@@ -203,13 +212,13 @@ class Converter:
                 raise Exception(f"FFmpeg 변환 실패: {process.stderr.read()}")
                 
             # 최종 파일명으로 변경
-            final_filename = f"{title}.mp3"
+            final_filename = f"{self.sanitize_filename(title)}.mp3"
             final_path = os.path.join(self.save_path, final_filename)
             
             # 파일명 중복 처리
             counter = 1
             while os.path.exists(final_path):
-                final_filename = f"{title}_{counter}.mp3"
+                final_filename = f"{self.sanitize_filename(title)}_{counter}.mp3"
                 final_path = os.path.join(self.save_path, final_filename)
                 counter += 1
                 
