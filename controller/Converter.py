@@ -112,7 +112,7 @@ class Converter:
             self.log.error(f"다운로드 중 오류 발생: {str(e)}")
             raise
             
-    def convert_to_mp3(self, input_file, title, quality):
+    def convert_to_mp3(self, input_file, title, quality, progress_callback=None):
         """다운로드된 비디오를 MP3로 변환합니다."""
         try:
             quality_map = {
@@ -177,10 +177,10 @@ class Converter:
                         h, m, s = value.split(':')
                         current_time = int(h) * 3600 + int(m) * 60 + float(s)
                         
-                        # 진행률 계산
-                        if total_duration:
+                        # 진행률 계산 및 콜백 호출
+                        if total_duration and progress_callback:
                             percentage = (current_time / total_duration) * 100
-                            print(f"진행률: {percentage:.1f}%")
+                            progress_callback(percentage)
                 
             # 프로세스 종료 대기
             process.wait()

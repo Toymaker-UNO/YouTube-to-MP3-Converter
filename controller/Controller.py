@@ -41,7 +41,7 @@ class URLCheckThread(QThread):
 
 class DownloadThread(QThread):
     """다운로드와 변환 작업을 처리하는 스레드"""
-    progress_updated = pyqtSignal(str,bool)  # 진행 상황 메시지
+    progress_updated = pyqtSignal(str, bool)  # 진행 상황 메시지
     speed_updated = pyqtSignal(str)     # 다운로드 속도
     download_completed = pyqtSignal(str)  # 완료 메시지
     error_occurred = pyqtSignal(str)    # 오류 메시지
@@ -65,6 +65,10 @@ class DownloadThread(QThread):
             def on_speed(speed):
                 self.current_speed = speed
                 
+            def on_convert_progress(percentage):
+                progress_text = "변환: " + log_display_controller_instance.create_progress_bar(percentage)
+                self.progress_updated.emit(progress_text, True)
+                
             # 다운로드 시작 메시지
             self.progress_updated.emit("다운로드를 시작합니다...", False)
             
@@ -81,7 +85,8 @@ class DownloadThread(QThread):
             final_path = self.converter.convert_to_mp3(
                 input_file=downloaded_file,
                 title=title,
-                quality=self.quality
+                quality=self.quality,
+                progress_callback=on_convert_progress
             )
             
             self.download_completed.emit(f"변환이 완료되었습니다!")
