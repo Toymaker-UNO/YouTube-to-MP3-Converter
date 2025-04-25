@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QMainWindow, QPlainTextEdit
 from PyQt5.QtCore import Qt
 from datetime import datetime
+import threading
 
 TIME_STRING_LENGTH = 24
 #LOG_DISPLAY_WINDOW_WIDTH = 76
@@ -10,10 +11,13 @@ class LogDisplayController:
     """로그 디스플레이를 관리하는 컨트롤러 클래스"""
     
     _instance = None
+    _lock = threading.Lock()  # 클래스 레벨의 Lock
     
     def __new__(cls):
         if cls._instance is None:
-            cls._instance = super(LogDisplayController, cls).__new__(cls)
+            with cls._lock:
+                if cls._instance is None:  # Double-checked locking
+                    cls._instance = super(LogDisplayController, cls).__new__(cls)
         return cls._instance
     
     def __init__(self):
@@ -28,11 +32,12 @@ class LogDisplayController:
         Args:
             window (QMainWindow): 메인 윈도우 객체
         """
-        self._window = window
-        self._log_display = self._window.findChild(QPlainTextEdit, "log_display")
-        if self._log_display:
-            # 가로 스크롤바가 생성되지 않도록 자동 줄바꿈 설정
-            self._log_display.setLineWrapMode(QPlainTextEdit.WidgetWidth)
+        with self._lock:
+            self._window = window
+            self._log_display = self._window.findChild(QPlainTextEdit, "log_display")
+            if self._log_display:
+                # 가로 스크롤바가 생성되지 않도록 자동 줄바꿈 설정
+                self._log_display.setLineWrapMode(QPlainTextEdit.WidgetWidth)
 
     def print_next_line(self, message: str):
         """다음 라인에 로그 메시지를 출력합니다.
@@ -40,10 +45,11 @@ class LogDisplayController:
         Args:
             message (str): 출력할 메시지
         """
-        if self._log_display:
-            log_message = self._get_current_time() + " " + message
-            self._contents.append(log_message)
-            self._print(log_message)
+        with self._lock:
+            if self._log_display:
+                log_message = self._get_current_time() + " " + message
+                self._contents.append(log_message)
+                self._print(log_message)
 
     def print_current_line(self, message: str):
         """현재 라인에 로그 메시지를 출력합니다.
@@ -51,15 +57,16 @@ class LogDisplayController:
         Args:
             message (str): 출력할 메시지
         """
-        if self._log_display:
-            log_message = self._get_current_time() + " " + message
-            self._contents.pop()
-            self._contents.append(log_message)
-            for i in range(len(self._contents)):
-                if i == 0 :
-                    self._print(self._contents[i],True)
-                else:
-                    self._print(self._contents[i])
+        with self._lock:
+            if self._log_display:
+                log_message = self._get_current_time() + " " + message
+                self._contents.pop()
+                self._contents.append(log_message)
+                for i in range(len(self._contents)):
+                    if i == 0 :
+                        self._print(self._contents[i],True)
+                    else:
+                        self._print(self._contents[i])
 
     def _print(self, log_message: str, set_flag: bool = False):
         log_message_list = self._string_devider(log_message, LOG_DISPLAY_WINDOW_WIDTH, LOG_DISPLAY_WINDOW_WIDTH - TIME_STRING_LENGTH, TIME_STRING_LENGTH)
@@ -71,18 +78,6 @@ class LogDisplayController:
                 self._log_display.appendPlainText(log_message)
             i += 1
             self._scroll_to_bottom()
-            
-    def print(self, message: str, ):
-        """로그 메시지를 출력합니다.
-        
-        Args:
-            message (str): 출력할 메시지
-        """
-        if self._log_display:
-            current_time = self._get_current_time()
-            self._append_log(f"{current_time} {message}")
-            self._scroll_to_bottom()
-            self.test_qtextdocument()
             
     def _scroll_to_bottom(self):
         """로그 디스플레이를 최하단으로 스크롤합니다."""

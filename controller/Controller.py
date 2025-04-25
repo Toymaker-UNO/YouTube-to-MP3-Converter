@@ -4,7 +4,7 @@ from PyQt5.QtCore import Qt, QTimer, QThread, pyqtSignal
 from controller.Converter import Converter
 import os
 from datetime import datetime
-
+from controller.LogDisplayController import log_display_controller_instance
 
 # 전역 상수 정의
 URL_CHECK_DELAY_MS = 1000  # URL 검사 타이머 지연 시간 (밀리초)
