@@ -43,3 +43,6 @@ class LogDisplayController:
         if self._log_display:
             v_scrollbar = self._log_display.verticalScrollBar()
             v_scrollbar.setValue(v_scrollbar.maximum()) 
+
+# 싱글톤 인스턴스 생성
+log_display_controller_instance = LogDisplayController()
