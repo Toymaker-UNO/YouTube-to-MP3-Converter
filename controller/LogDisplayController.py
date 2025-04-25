@@ -52,6 +52,22 @@ class LogDisplayController:
                 self._contents.append(log_message)
                 self._print(log_message)
 
+    def create_progress_bar(self, percentage, progress_length=20):
+        """
+        텍스트 기반 프로그레스 바를 생성합니다.
+        
+        Args:
+            percentage (int): 진행률 (0-100)
+            progress_length (int): 프로그레스 바의 전체 길이 (기본값: 20)
+            current_speed (str): 현재 다운로드 속도 (기본값: "0.0 MB/s")
+        
+        Returns:
+            str: 포맷된 프로그레스 바 문자열
+        """
+        filled = int((percentage * (progress_length - 1)) / 100)  # 최대 progress_length-1칸
+        progress_bar = '=' * filled + '>' + ' ' * (progress_length - filled - 1)
+        return f"[{progress_bar}] {percentage:3}%"
+
     def print_current_line(self, message: str):
         """현재 라인에 로그 메시지를 출력합니다.
         

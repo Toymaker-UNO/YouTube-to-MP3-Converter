@@ -41,7 +41,7 @@ class URLCheckThread(QThread):
 
 class DownloadThread(QThread):
     """다운로드와 변환 작업을 처리하는 스레드"""
-    progress_updated = pyqtSignal(str)  # 진행 상황 메시지
+    progress_updated = pyqtSignal(str,bool)  # 진행 상황 메시지
     speed_updated = pyqtSignal(str)     # 다운로드 속도
     download_completed = pyqtSignal(str)  # 완료 메시지
     error_occurred = pyqtSignal(str)    # 오류 메시지
@@ -58,17 +58,14 @@ class DownloadThread(QThread):
             # 진행 상황 콜백 함수
             def on_progress(percentage):
                 # 프로그레스 바 생성 (20칸)
-                progress_length = 20
-                filled = int((percentage * (progress_length - 1)) / 100)  # 최대 19칸
-                progress_bar = '=' * filled + '>' + ' ' * (progress_length - filled - 1)
-                # 퍼센트와 속도 표시 위치 고정 (속도는 최대 12자리까지 허용)
-                self.progress_updated.emit(f"[{progress_bar}] {percentage:3}%  ({self.current_speed:>12})")
+                progress_text = "다운로드: " + log_display_controller_instance.create_progress_bar(percentage) + f" ({self.current_speed:>12})"
+                self.progress_updated.emit(progress_text, True)
                 
             def on_speed(speed):
                 self.current_speed = speed
                 
             # 다운로드 시작 메시지
-            self.progress_updated.emit("다운로드를 시작합니다...")
+            self.progress_updated.emit("다운로드를 시작합니다...", False)
             
             # 다운로드
             downloaded_file, title = self.converter.download_video(
@@ -79,7 +76,7 @@ class DownloadThread(QThread):
             )
             
             # MP3 변환
-            self.progress_updated.emit("MP3 변환을 시작합니다...")
+            self.progress_updated.emit("MP3 변환을 시작합니다...", False)
             final_path = self.converter.convert_to_mp3(
                 input_file=downloaded_file,
                 title=title,
@@ -106,8 +103,12 @@ class Controller:
         """현재 시간을 [HH:MM:SS] 형식으로 반환합니다."""
         return datetime.now().strftime("[%H:%M:%S]")
 
-    def _update_log(self, message):
-        log_display_controller_instance.print_next_line(message)
+    def _update_log(self, message, current_line: bool = False):
+        if current_line:
+            log_display_controller_instance.print_current_line(message)
+        else:
+            log_display_controller_instance.print_next_line(message)
+
 
     def run(self, window: QMainWindow):
         """
@@ -125,17 +126,8 @@ class Controller:
             self._setup_event_handlers()
             self._initialized = True
             log_display_controller_instance.initialize(window)
+            self._update_log("URL입력을 기다리고 있습니다.")
 
-            # 로그 디스플레이 초기화
-            self._initialize_log_display()
-
-    def _initialize_log_display(self):
-        """로그 디스플레이를 초기화하고 초기 메시지를 출력합니다."""
-        log_display = self._window.findChild(QPlainTextEdit, "log_display")
-        if log_display:
-            # 가로 스크롤바가 생성되지 않도록 자동 줄바꿈 설정
-            log_display.setLineWrapMode(QPlainTextEdit.WidgetWidth)
-        self._update_log("URL입력을 기다리고 있습니다.")
 
     def _setup_event_handlers(self):
         """이벤트 핸들러를 설정합니다."""
@@ -334,22 +326,6 @@ class Controller:
     def __del__(self):
         """소멸자"""
         pass
-
-    def _create_progress_bar(self, percentage, progress_length=20):
-        """
-        텍스트 기반 프로그레스 바를 생성합니다.
-        
-        Args:
-            percentage (int): 진행률 (0-100)
-            progress_length (int): 프로그레스 바의 전체 길이 (기본값: 20)
-            current_speed (str): 현재 다운로드 속도 (기본값: "0.0 MB/s")
-        
-        Returns:
-            str: 포맷된 프로그레스 바 문자열
-        """
-        filled = int((percentage * (progress_length - 1)) / 100)  # 최대 progress_length-1칸
-        progress_bar = '=' * filled + '>' + ' ' * (progress_length - filled - 1)
-        return f"[{progress_bar}] {percentage:3}%"
 
 # 싱글톤 인스턴스 생성
 controller_instance = Controller() 
