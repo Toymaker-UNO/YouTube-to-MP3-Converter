@@ -1,5 +1,6 @@
 from PyQt5.QtWidgets import QMainWindow, QPlainTextEdit
 from PyQt5.QtCore import Qt
+from datetime import datetime
 
 class LogDisplayController:
     """로그 디스플레이를 관리하는 컨트롤러 클래스"""
@@ -35,7 +36,8 @@ class LogDisplayController:
             message (str): 출력할 메시지
         """
         if self._log_display:
-            self._log_display.appendPlainText(message)
+            current_time = self.get_current_time()
+            self._log_display.appendPlainText(f"{current_time} {message}")
             self._scroll_to_bottom()
             
     def _scroll_to_bottom(self):
@@ -43,6 +45,15 @@ class LogDisplayController:
         if self._log_display:
             v_scrollbar = self._log_display.verticalScrollBar()
             v_scrollbar.setValue(v_scrollbar.maximum()) 
+
+    def get_current_time(self) -> str:
+        """현재 시간을 [YY.MM.DD-HH:MM:SS.MSEC] 형식으로 반환합니다.
+        
+        Returns:
+            str: 포맷팅된 현재 시간 문자열
+        """
+        now = datetime.now()
+        return now.strftime("[%y.%m.%d-%H:%M:%S.%f")[:-3] + "]"
 
 # 싱글톤 인스턴스 생성
 log_display_controller_instance = LogDisplayController()

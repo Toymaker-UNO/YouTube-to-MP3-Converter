@@ -14,6 +14,9 @@ def main():
     # 테스트 로그 출력
     log_display_controller_instance.initialize(window)
     log_display_controller_instance.print("테스트 로그 메시지입니다.")
+    log_display_controller_instance.print("테스트 로그 메시지입니다.")
+    log_display_controller_instance.print("테스트 로그 메시지입니다.")
+    
 
     # 애플리케이션 실행
     sys.exit(app.exec_())
