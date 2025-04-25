@@ -66,7 +66,7 @@ class DownloadThread(QThread):
                 self.current_speed = speed
                 
             def on_convert_progress(percentage):
-                progress_text = "변환: " + log_display_controller_instance.create_progress_bar(percentage)
+                progress_text = "MP3변환: " + log_display_controller_instance.create_progress_bar(percentage)
                 self.progress_updated.emit(progress_text, True)
                 
             # 다운로드 시작 메시지
@@ -81,7 +81,7 @@ class DownloadThread(QThread):
             )
             
             # MP3 변환
-            self.progress_updated.emit("MP3 변환을 시작합니다...", False)
+            self.progress_updated.emit("MP3변환을 시작합니다...", False)
             final_path = self.converter.convert_to_mp3(
                 input_file=downloaded_file,
                 title=title,
@@ -89,7 +89,6 @@ class DownloadThread(QThread):
                 progress_callback=on_convert_progress
             )
             
-            self.download_completed.emit(f"변환이 완료되었습니다!")
             self.download_completed.emit(f"저장 경로: {final_path}")
             
         except Exception as e:
