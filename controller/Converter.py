@@ -87,6 +87,15 @@ class Converter:
             temp_filename = f"temp_{int(datetime.now().timestamp())}"
             temp_path = os.path.join(self.save_path, f"{temp_filename}.%(ext)s")
             
+            # 커스텀 로거 클래스
+            class MyLogger:
+                def debug(self, msg):
+                    pass
+                def warning(self, msg):
+                    pass
+                def error(self, msg):
+                    pass
+            
             ydl_opts = {
                 'format': f'bestaudio[abr<={quality_map[quality]}]',
                 'outtmpl': temp_path,
@@ -94,7 +103,12 @@ class Converter:
                 'noplaylist': True,
                 'extract_flat': False,
                 'quiet': True,
-                'no_warnings': True
+                'no_warnings': True,
+                'noprogress': True,  # 진행률 메시지 출력 비활성화
+                'logger': MyLogger(),  # 커스텀 로거 사용
+                'verbose': False,  # 상세 출력 비활성화
+                'ignoreerrors': False,
+                'force_generic_extractor': False
             }
             
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
