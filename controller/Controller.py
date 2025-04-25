@@ -57,8 +57,9 @@ class DownloadThread(QThread):
         try:
             # 진행 상황 콜백 함수
             def on_progress(percentage):
-                # 프로그레스 바 생성 (20칸)
-                progress_text = "다운로드: " + log_display_controller_instance.create_progress_bar(percentage) + f" ({self.current_speed:>12})"
+                progress_text = "다운로드: " + log_display_controller_instance.create_progress_bar(percentage)
+                if 100 != percentage:
+                    progress_text += f" ({self.current_speed:>12})"
                 self.progress_updated.emit(progress_text, True)
                 
             def on_speed(speed):
@@ -83,7 +84,8 @@ class DownloadThread(QThread):
                 quality=self.quality
             )
             
-            self.download_completed.emit(f"변환이 완료되었습니다!\n저장 경로: {final_path}")
+            self.download_completed.emit(f"변환이 완료되었습니다!")
+            self.download_completed.emit(f"저장 경로: {final_path}")
             
         except Exception as e:
             self.error_occurred.emit(f"오류가 발생했습니다: {str(e)}")
@@ -99,16 +101,11 @@ class Controller:
             cls._instance._initialized = False
         return cls._instance
 
-    def _get_timestamp(self):
-        """현재 시간을 [HH:MM:SS] 형식으로 반환합니다."""
-        return datetime.now().strftime("[%H:%M:%S]")
-
     def _update_log(self, message, current_line: bool = False):
         if current_line:
             log_display_controller_instance.print_current_line(message)
         else:
             log_display_controller_instance.print_next_line(message)
-
 
     def run(self, window: QMainWindow):
         """
@@ -127,7 +124,6 @@ class Controller:
             self._initialized = True
             log_display_controller_instance.initialize(window)
             self._update_log("URL입력을 기다리고 있습니다.")
-
 
     def _setup_event_handlers(self):
         """이벤트 핸들러를 설정합니다."""
@@ -248,16 +244,7 @@ class Controller:
             
     def _handle_download_completed(self, message):
         """다운로드 완료 이벤트 핸들러"""
-        # 메시지를 줄 단위로 분리
-        lines = message.split('\n')
-        for i, line in enumerate(lines):
-            if i == 0:
-                # 첫 번째 줄은 일반 메시지로 처리
-                self._update_log(line)
-            else:
-                # 두 번째 줄부터는 타임스탬프 길이만큼 공백 추가
-                timestamp_length = len(self._get_timestamp()) + 1  # +1은 공백
-                self._update_log(" " * timestamp_length + line)
+        self._update_log(message)
                 
         # 모든 위젯 활성화
         download_button = self._window.findChild(QPushButton, "download_button")

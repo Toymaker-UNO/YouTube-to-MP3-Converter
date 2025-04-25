@@ -6,7 +6,7 @@ import threading
 TIME_STRING_LENGTH = 24
 #LOG_DISPLAY_WINDOW_WIDTH = 76
 #LOG_DISPLAY_WINDOW_WIDTH = 74
-LOG_DISPLAY_WINDOW_WIDTH = 90
+LOG_DISPLAY_WINDOW_WIDTH = 88
 
 class LogDisplayController:
     """로그 디스플레이를 관리하는 컨트롤러 클래스"""
