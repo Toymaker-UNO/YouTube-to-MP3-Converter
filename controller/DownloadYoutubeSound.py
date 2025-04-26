@@ -1,11 +1,11 @@
 import yt_dlp
 import os
 from datetime import datetime
-from model.Log import Log
+from model.Log import log_instance
 
 class DownloadYoutubeSound:
     def __init__(self):
-        self.log = Log()
+        pass
             
     def download_audio(self, url, quality, save_path=None, progress_callback=None, speed_callback=None):
         """YouTube 비디오에서 오디오만 다운로드합니다."""
@@ -32,7 +32,7 @@ class DownloadYoutubeSound:
                 return downloaded_file, info['title']
                 
         except Exception as e:
-            self.log.error(f"다운로드 중 오류 발생: {str(e)}")
+            log_instance.error(f"다운로드 중 오류 발생: {str(e)}")
             raise
             
     def _setup_save_path(self, save_path):
@@ -58,14 +58,6 @@ class DownloadYoutubeSound:
             '48K': '48'
         }
         
-        class MyLogger:
-            def debug(self, msg):
-                pass
-            def warning(self, msg):
-                pass
-            def error(self, msg):
-                pass
-        
         return {
             'format': f'bestaudio[abr<={quality_map[quality]}]',
             'outtmpl': temp_path,
@@ -75,7 +67,7 @@ class DownloadYoutubeSound:
             'quiet': True,
             'no_warnings': True,
             'noprogress': True,
-            'logger': MyLogger(),
+            'logger': log_instance,
             'verbose': False,
             'ignoreerrors': False
         }
@@ -97,4 +89,4 @@ class DownloadYoutubeSound:
                     speed_callback(speed_str)
                     
             except Exception as e:
-                self.log.error(f"진행 상황 업데이트 중 오류 발생: {str(e)}") 
+                log_instance.error(f"진행 상황 업데이트 중 오류 발생: {str(e)}") 
