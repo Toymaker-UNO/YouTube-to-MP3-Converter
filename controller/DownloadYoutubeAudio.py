@@ -3,7 +3,7 @@ import os
 from datetime import datetime
 from model.Log import log_instance
 
-class DownloadYoutubeSound:
+class DownloadYoutubeAudio:
     def __init__(self):
         pass
             
