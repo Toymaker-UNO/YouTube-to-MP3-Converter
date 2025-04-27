@@ -26,8 +26,71 @@ class NewLog:
                 self._log_level = logging.DEBUG
                 self._file_handler = None
                 self._console_handler = None
-                self._formatter = None
+                self._file_formatter = None
+                self._console_formatter = None
                 self._logger = None
+                
+    def setup(self, 
+              enable_logging: bool = True,
+              log_file: str = 'log.txt',
+              max_size_mb: int = 10,
+              backup_count: int = 2,
+              encoding: str = 'utf-8',
+              log_level: str = 'DEBUG') -> None:
+        """
+        로깅 시스템을 초기화합니다.
+        
+        Args:
+            enable_logging (bool): 로깅 활성화 여부
+            log_file (str): 로그 파일 경로
+            max_size_mb (int): 최대 파일 크기 (MB)
+            backup_count (int): 백업 파일 최대 개수
+            encoding (str): 파일 인코딩
+            log_level (str): 로그 레벨 (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+        """
+        self._enable_logging = enable_logging
+        self._log_file = log_file
+        self._max_size_mb = max_size_mb
+        self._backup_count = backup_count
+        self._encoding = encoding
+        self._log_level = self._convert_log_level(log_level)
+        
+        # 로거 초기화
+        self._initialize_logger()
+        
+        # 기존 핸들러 제거
+        self._remove_existing_handlers()
+        
+        # 파일 핸들러 설정
+        self._open_file_handler()
+        self._set_file_formatter()
+        
+        # 콘솔 핸들러 설정
+        self._open_console_handler()
+        self._set_console_formatter()
+
+    def _convert_log_level(self, log_level: str) -> int:
+        """
+        로그 레벨 문자열을 숫자로 변환합니다.
+        
+        Args:
+            log_level (str): 로그 레벨 (DEBUG, INFO, WARNING, ERROR, CRITICAL)  
+        """
+        level_map = {
+            'DEBUG': logging.DEBUG,
+            'INFO': logging.INFO,
+            'WARNING': logging.WARNING,
+            'ERROR': logging.ERROR,
+            'CRITICAL': logging.CRITICAL
+        }
+        return level_map.get(log_level.upper(), logging.DEBUG)
+
+    def _initialize_logger(self) -> None:
+        """
+        로거를 초기화합니다.
+        """
+        self._logger = logging.getLogger('default_logger')
+        self._logger.setLevel(self._log_level)
 
     def _remove_existing_handlers(self) -> None:
         """
@@ -51,7 +114,39 @@ class NewLog:
         )
         self._file_handler.setLevel(self._log_level)
         self._logger.addHandler(self._file_handler)
-        
+
+    def _set_file_formatter(self) -> None:
+        """
+        파일 핸들러의 포메터를 설정합니다.
+        상세한 로그 정보를 포함합니다.
+        """
+        if hasattr(self, '_file_handler'):
+            self._file_formatter = logging.Formatter(
+                '%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s',
+                datefmt='%Y-%m-%d %H:%M:%S.%f'
+            )
+            self._file_handler.setFormatter(self._file_formatter)
+
+    def _open_console_handler(self) -> None:
+        """
+        콘솔 핸들러를 생성하고 로거에 추가합니다.
+        """
+        self._console_handler = logging.StreamHandler()
+        self._console_handler.setLevel(self._log_level)
+        self._logger.addHandler(self._console_handler)
+
+    def _set_console_formatter(self) -> None:
+        """
+        콘솔 핸들러의 포메터를 설정합니다.
+        간단하고 가독성 있는 형식을 사용합니다.
+        """
+        if hasattr(self, '_console_handler'):
+            self._console_formatter = logging.Formatter(
+                '%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s',
+                datefmt='%Y-%m-%d %H:%M:%S.%f'
+            )
+            self._console_handler.setFormatter(self._console_formatter)
+
     def _close_file_handler(self) -> None:
         """
         파일 핸들러를 닫고 로거에서 제거합니다.
@@ -62,14 +157,6 @@ class NewLog:
             del self._file_handler
             self._file_handler = None
 
-    def _open_console_handler(self) -> None:
-        """
-        콘솔 핸들러를 생성하고 로거에 추가합니다.
-        """
-        self._console_handler = logging.StreamHandler()
-        self._console_handler.setLevel(self._log_level)
-        self._logger.addHandler(self._console_handler)
-        
     def _close_console_handler(self) -> None:
         """
         콘솔 핸들러를 닫고 로거에서 제거합니다.
@@ -79,31 +166,6 @@ class NewLog:
             self._console_handler.close()
             del self._console_handler
             self._console_handler = None
-
-    def _set_file_formatter(self) -> None:
-        """
-        파일 핸들러의 포메터를 설정합니다.
-        상세한 로그 정보를 포함합니다.
-        """
-        if hasattr(self, '_file_handler'):
-            formatter = logging.Formatter(
-                '%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s',
-                datefmt='%Y-%m-%d %H:%M:%S.%f'
-            )
-            self._file_handler.setFormatter(formatter)
-            
-    def _set_console_formatter(self) -> None:
-        """
-        콘솔 핸들러의 포메터를 설정합니다.
-        간단하고 가독성 있는 형식을 사용합니다.
-        """
-        if hasattr(self, '_console_handler'):
-            formatter = logging.Formatter(
-                '%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s',
-                datefmt='%Y-%m-%d %H:%M:%S.%f'
-            )
-            self._console_handler.setFormatter(formatter)
-
 
                 
 
