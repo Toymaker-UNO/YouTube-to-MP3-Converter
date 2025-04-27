@@ -1,7 +1,7 @@
 import json
 import os
 from model.Configuration import configuration_instance
-from model.Log import log_instance
+from model.Log import log
 
 class Model:
     _instance = None
@@ -26,7 +26,7 @@ class Model:
         log_level = configuration_instance.get("logging", "log_level")
         
         # Log 초기화
-        log_instance.initialize(
+        log.setup(
             enable_logging=enable_logging,
             log_file=log_file,
             max_size_mb=max_size_mb,

@@ -1,210 +1,211 @@
-import logging
-import os
-import time
-from logging.handlers import RotatingFileHandler
+import threading
 from typing import Optional
-import traceback
+import logging
+from logging.handlers import RotatingFileHandler
 
 class Log:
-    # 클래스 레벨 상수
-    DEFAULT_LOG_FILE = 'log.txt'
-    DEFAULT_MAX_SIZE = 10 * 1024 * 1024  # 10MB
-    DEFAULT_BACKUP_COUNT = 2
-    DEFAULT_ENCODING = 'utf-8'
-    DEFAULT_LEVEL = logging.DEBUG
+    _instance: Optional['Log'] = None
+    _lock = threading.Lock()
     
-    # 싱글톤 인스턴스
-    _instance = None
-    
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(Log, cls).__new__(cls)
-            cls._instance._initialized = False
+    def __new__(cls) -> 'Log':
+        with cls._lock:
+            if cls._instance is None:
+                cls._instance = super(Log, cls).__new__(cls)
+                cls._instance._initialized = False
         return cls._instance
     
     def __init__(self):
-        pass
-        
-    def initialize(self, 
-                  enable_logging: bool = True,
-                  log_file: str = DEFAULT_LOG_FILE,
-                  max_size_mb: int = 10,
-                  backup_count: int = 2,
-                  encoding: str = 'utf-8',
-                  log_level: str = 'DEBUG') -> None:
+        with self._lock:
+            if not self._initialized:
+                self._initialized = True 
+                self._enable_logging = False
+                self._log_file = 'log.txt'
+                self._max_size_mb = 10
+                self._backup_count = 2
+                self._encoding = 'utf-8'
+                self._log_level = logging.DEBUG
+                self._file_handler = None
+                self._console_handler = None
+                self._file_formatter = None
+                self._console_formatter = None
+                self._logger = None
+                
+    def setup(self, 
+              enable_logging: bool = True,
+              log_file: str = 'log.txt',
+              max_size_mb: int = 10,
+              backup_count: int = 2,
+              encoding: str = 'utf-8',
+              log_level: str = 'DEBUG') -> None:
         """
         로깅 시스템을 초기화합니다.
         
         Args:
-            enable_logging (bool): 로깅 활성화 여부 (기본값: True)
-            log_file (str): 로그 파일 경로 (기본값: 'youtube_to_mp3.log.txt')
-            max_size_mb (int): 최대 로그 파일 크기 (MB) (기본값: 10)
-            backup_count (int): 백업 파일 최대 개수 (기본값: 2)
-            encoding (str): 파일 인코딩 (기본값: 'utf-8')
-            log_level (str): 로그 레벨 (기본값: 'DEBUG')
-                              가능한 값: 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'
+            enable_logging (bool): 로깅 활성화 여부
+            log_file (str): 로그 파일 경로
+            max_size_mb (int): 최대 파일 크기 (MB)
+            backup_count (int): 백업 파일 최대 개수
+            encoding (str): 파일 인코딩
+            log_level (str): 로그 레벨 (DEBUG, INFO, WARNING, ERROR, CRITICAL)
         """
-        # 기존 핸들러 제거
-        if hasattr(self, 'logger'):
-            for handler in self.logger.handlers[:]:
-                self.logger.removeHandler(handler)
+        with self._lock:
+            self._enable_logging = enable_logging
+            self._log_file = log_file
+            self._max_size_mb = max_size_mb
+            self._backup_count = backup_count
+            self._encoding = encoding
+            self._log_level = self._convert_log_level(log_level)
+
+            if False == enable_logging:
+                return
+            
+            # 로거 초기화
+            self._initialize_logger()
+            
+            # 기존 핸들러 제거
+            self._remove_existing_handlers()
+            
+            # 파일 핸들러 설정
+            self._open_file_handler()
+            self._set_file_formatter()
+            
+            # 콘솔 핸들러 설정
+            self._open_console_handler()
+            self._set_console_formatter()
+
+    def _convert_log_level(self, log_level: str) -> int:
+        """
+        로그 레벨 문자열을 숫자로 변환합니다.
+        
+        Args:
+            log_level (str): 로그 레벨 (DEBUG, INFO, WARNING, ERROR, CRITICAL)  
+        """
+        level_map = {
+            'DEBUG': logging.DEBUG,
+            'INFO': logging.INFO,
+            'WARNING': logging.WARNING,
+            'ERROR': logging.ERROR,
+            'CRITICAL': logging.CRITICAL
+        }
+        return level_map.get(log_level.upper(), logging.DEBUG)
+
+    def _initialize_logger(self) -> None:
+        """
+        로거를 초기화합니다.
+        """
+        self._logger = logging.getLogger('default_logger')
+        self._logger.setLevel(self._log_level)
+
+    def _remove_existing_handlers(self) -> None:
+        """
+        기존에 등록된 모든 핸들러를 제거하고 닫습니다.
+        이는 로깅 설정을 재설정하기 전에 호출되어야 합니다.
+        """
+        if hasattr(self, '_logger'):
+            for handler in self._logger.handlers[:]:
+                self._logger.removeHandler(handler)
                 handler.close()
-        
-        # 로그 파일 경로 설정
-        self.DEFAULT_LOG_FILE = log_file
-        self.DEFAULT_MAX_SIZE = max_size_mb * 1024 * 1024
-        self.DEFAULT_BACKUP_COUNT = backup_count
-        self.DEFAULT_ENCODING = encoding
-        
-        # 로그 레벨 설정
-        level_map = {
-            'DEBUG': logging.DEBUG,
-            'INFO': logging.INFO,
-            'WARNING': logging.WARNING,
-            'ERROR': logging.ERROR,
-            'CRITICAL': logging.CRITICAL
-        }
-        self.DEFAULT_LEVEL = level_map.get(log_level.upper(), logging.DEBUG)
-        
-        # 로거 설정
-        self.logger = logging.getLogger('default_logger')
-        self.logger.setLevel(self.DEFAULT_LEVEL)
-        
-        # 파일 핸들러 설정
-        self.file_handler = None
-        self.setup_file_handler()
-        
-        # 콘솔 핸들러 설정
-        self.console_handler = logging.StreamHandler()
-        self.console_handler.setLevel(self.DEFAULT_LEVEL)
-        self.logger.addHandler(self.console_handler)
-        
-        # 로그 포맷 설정
-        self.setup_formatters()
-        
-        # 로깅 활성화/비활성화
-        self.enable_logging(enable_logging)
-        
-        self.info(f"""
-로깅 시스템 초기화 완료:
-- 로깅 활성화: {enable_logging}
-- 로그 파일: {log_file}
-- 최대 크기: {max_size_mb}MB
-- 백업 개수: {backup_count}
-- 인코딩: {encoding}
-- 로그 레벨: {log_level}
-        """)
-        
-    def setup_file_handler(self):
-        """파일 핸들러 설정"""
-        if self.file_handler:
-            self.logger.removeHandler(self.file_handler)
-            
-        self.file_handler = RotatingFileHandler(
-            self.DEFAULT_LOG_FILE,
-            maxBytes=self.DEFAULT_MAX_SIZE,
-            backupCount=self.DEFAULT_BACKUP_COUNT,
-            encoding=self.DEFAULT_ENCODING
+
+    def _open_file_handler(self) -> None:
+        """
+        파일 핸들러를 생성하고 로거에 추가합니다.
+        """
+        self._file_handler = RotatingFileHandler(
+            filename=self._log_file,
+            maxBytes=self._max_size_mb * 1024 * 1024    ,
+            backupCount=self._backup_count,
+            encoding=self._encoding
         )
-        self.file_handler.setLevel(self.DEFAULT_LEVEL)
-        self.logger.addHandler(self.file_handler)
-        
-    def setup_formatters(self):
-        """로그 포맷터 설정"""
-        formatter = logging.Formatter(
-            '%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S'
-        )
-        self.file_handler.setFormatter(formatter)
-        self.console_handler.setFormatter(formatter)
-        
-    def debug(self, message: str):
-        """디버그 레벨 로깅"""
-        self.logger.debug(message)
-        
-    def info(self, message: str):
-        """정보 레벨 로깅"""
-        self.logger.info(message)
-        
-    def warning(self, message: str):
-        """경고 레벨 로깅"""
-        self.logger.warning(message)
-        
-    def error(self, message: str):
-        """오류 레벨 로깅"""
-        self.logger.error(message)
-        
-    def critical(self, message: str):
-        """치명적 오류 레벨 로깅"""
-        self.logger.critical(message)
-        
-    def set_log_file_path(self, path: str):
-        """로그 파일 경로 설정"""
-        self.DEFAULT_LOG_FILE = path
-        self.setup_file_handler()
-        
-    def set_max_log_size_mb(self, size_mb: int):
-        """최대 로그 파일 크기 설정 (MB)"""
-        self.DEFAULT_MAX_SIZE = size_mb * 1024 * 1024
-        self.setup_file_handler()
-        
-    def set_max_backup_count(self, count: int):
-        """백업 파일 최대 개수 설정"""
-        self.DEFAULT_BACKUP_COUNT = count
-        self.setup_file_handler()
-        
-    def set_encoding(self, encoding: str):
-        """인코딩 설정"""
-        self.DEFAULT_ENCODING = encoding
-        self.setup_file_handler()
-        
-    def set_level(self, level: str):
-        """로그 레벨 설정"""
-        level_map = {
-            'DEBUG': logging.DEBUG,
-            'INFO': logging.INFO,
-            'WARNING': logging.WARNING,
-            'ERROR': logging.ERROR,
-            'CRITICAL': logging.CRITICAL
-        }
-        self.DEFAULT_LEVEL = level_map.get(level.upper(), logging.DEBUG)
-        self.logger.setLevel(self.DEFAULT_LEVEL)
-        self.file_handler.setLevel(self.DEFAULT_LEVEL)
-        self.console_handler.setLevel(self.DEFAULT_LEVEL)
-        
-    def enable_logging(self, enable: bool = True):
-        """로깅 활성화/비활성화"""
-        if enable:
-            self.logger.setLevel(self.DEFAULT_LEVEL)
-            self.file_handler.setLevel(self.DEFAULT_LEVEL)
-            self.console_handler.setLevel(self.DEFAULT_LEVEL)
-        else:
-            self.logger.setLevel(logging.CRITICAL + 1)  # 모든 로깅 비활성화
-            self.file_handler.setLevel(logging.CRITICAL + 1)
-            self.console_handler.setLevel(logging.CRITICAL + 1)
-            
-    def is_enabled(self) -> bool:
-        """로깅이 활성화되어 있는지 확인"""
-        return self.logger.level != logging.CRITICAL + 1
-        
-    def log_exception(self, exception: Exception):
-        """예외 정보를 상세히 로깅"""
-        self.error(f"예외 발생: {str(exception)}")
-        self.error(f"예외 유형: {type(exception).__name__}")
-        self.error(f"스택 트레이스:\n{traceback.format_exc()}")
-        
-    def log_performance(self, message: str):
-        """성능 정보 로깅"""
-        self.info(f"성능 정보: {message}")
+        self._file_handler.setLevel(self._log_level)
+        self._logger.addHandler(self._file_handler)
 
-    def get_log_file_path(self) -> str:
-        """로그 파일 경로 반환"""
-        return self.DEFAULT_LOG_FILE
+    def _set_file_formatter(self) -> None:
+        """
+        파일 핸들러의 포메터를 설정합니다.
+        상세한 로그 정보를 포함합니다.
+        """
+        if hasattr(self, '_file_handler'):
+            self._file_formatter = logging.Formatter(
+                '%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s',
+                datefmt='%Y-%m-%d %H:%M:%S.%f'
+            )
+            self._file_handler.setFormatter(self._file_formatter)
 
-# 사용 예시:
-# logger = Log()
-# logger.info("정보 메시지")
-# logger.error("에러 메시지") 
+    def _open_console_handler(self) -> None:
+        """
+        콘솔 핸들러를 생성하고 로거에 추가합니다.
+        """
+        self._console_handler = logging.StreamHandler()
+        self._console_handler.setLevel(self._log_level)
+        self._logger.addHandler(self._console_handler)
 
+    def _set_console_formatter(self) -> None:
+        """
+        콘솔 핸들러의 포메터를 설정합니다.
+        간단하고 가독성 있는 형식을 사용합니다.
+        """
+        if hasattr(self, '_console_handler'):
+            self._console_formatter = logging.Formatter(
+                '%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s',
+                datefmt='%Y-%m-%d %H:%M:%S.%f'
+            )
+            self._console_handler.setFormatter(self._console_formatter)
+
+    def _close_file_handler(self) -> None:
+        """
+        파일 핸들러를 닫고 로거에서 제거합니다.
+        """
+        if hasattr(self, '_file_handler'):
+            self._logger.removeHandler(self._file_handler)
+            self._file_handler.close()
+            del self._file_handler
+            self._file_handler = None
+
+    def _close_console_handler(self) -> None:
+        """
+        콘솔 핸들러를 닫고 로거에서 제거합니다.
+        """
+        if hasattr(self, '_console_handler'):
+            self._logger.removeHandler(self._console_handler)
+            self._console_handler.close()
+            del self._console_handler
+            self._console_handler = None
+
+    def debug(self, msg: str) -> None:
+        """디버그 메시지를 로깅합니다."""
+        with self._lock:
+            if self._logger and self._enable_logging:
+                self._logger.debug(msg)
+
+    def info(self, msg: str) -> None:
+        """정보 메시지를 로깅합니다."""
+        with self._lock:
+            if self._logger and self._enable_logging:
+                self._logger.info(msg)
+
+    def warning(self, msg: str) -> None:
+        """경고 메시지를 로깅합니다."""
+        with self._lock:
+            if self._logger and self._enable_logging:
+                self._logger.warning(msg)
+
+    def error(self, msg: str) -> None:
+        """오류 메시지를 로깅합니다."""
+        with self._lock:
+            if self._logger and self._enable_logging:
+                self._logger.error(msg)
+
+    def critical(self, msg: str) -> None:
+        """심각한 오류 메시지를 로깅합니다."""
+        with self._lock:
+            if self._logger and self._enable_logging:
+                self._logger.critical(msg)
+
+    def exception(self, msg: str) -> None:
+        """예외 정보를 로깅합니다."""
+        with self._lock:
+            if self._logger and self._enable_logging:
+                self._logger.exception(msg)
+                
 # 싱글톤 인스턴스 생성
-log_instance = Log()
+log = Log()
