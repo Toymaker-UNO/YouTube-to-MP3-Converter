@@ -55,6 +55,9 @@ class NewLog:
             self._backup_count = backup_count
             self._encoding = encoding
             self._log_level = self._convert_log_level(log_level)
+
+            if False == enable_logging:
+                return
             
             # 로거 초기화
             self._initialize_logger()
