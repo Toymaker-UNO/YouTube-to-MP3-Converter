@@ -168,6 +168,41 @@ class NewLog:
             del self._console_handler
             self._console_handler = None
 
+    def debug(self, msg: str) -> None:
+        """디버그 메시지를 로깅합니다."""
+        with self._lock:
+            if self._logger and self._enable_logging:
+                self._logger.debug(msg)
+
+    def info(self, msg: str) -> None:
+        """정보 메시지를 로깅합니다."""
+        with self._lock:
+            if self._logger and self._enable_logging:
+                self._logger.info(msg)
+
+    def warning(self, msg: str) -> None:
+        """경고 메시지를 로깅합니다."""
+        with self._lock:
+            if self._logger and self._enable_logging:
+                self._logger.warning(msg)
+
+    def error(self, msg: str) -> None:
+        """오류 메시지를 로깅합니다."""
+        with self._lock:
+            if self._logger and self._enable_logging:
+                self._logger.error(msg)
+
+    def critical(self, msg: str) -> None:
+        """심각한 오류 메시지를 로깅합니다."""
+        with self._lock:
+            if self._logger and self._enable_logging:
+                self._logger.critical(msg)
+
+    def exception(self, msg: str) -> None:
+        """예외 정보를 로깅합니다."""
+        with self._lock:
+            if self._logger and self._enable_logging:
+                self._logger.exception(msg)
                 
 # 싱글톤 인스턴스 생성
 log = NewLog()
