@@ -48,26 +48,27 @@ class NewLog:
             encoding (str): 파일 인코딩
             log_level (str): 로그 레벨 (DEBUG, INFO, WARNING, ERROR, CRITICAL)
         """
-        self._enable_logging = enable_logging
-        self._log_file = log_file
-        self._max_size_mb = max_size_mb
-        self._backup_count = backup_count
-        self._encoding = encoding
-        self._log_level = self._convert_log_level(log_level)
-        
-        # 로거 초기화
-        self._initialize_logger()
-        
-        # 기존 핸들러 제거
-        self._remove_existing_handlers()
-        
-        # 파일 핸들러 설정
-        self._open_file_handler()
-        self._set_file_formatter()
-        
-        # 콘솔 핸들러 설정
-        self._open_console_handler()
-        self._set_console_formatter()
+        with self._lock:
+            self._enable_logging = enable_logging
+            self._log_file = log_file
+            self._max_size_mb = max_size_mb
+            self._backup_count = backup_count
+            self._encoding = encoding
+            self._log_level = self._convert_log_level(log_level)
+            
+            # 로거 초기화
+            self._initialize_logger()
+            
+            # 기존 핸들러 제거
+            self._remove_existing_handlers()
+            
+            # 파일 핸들러 설정
+            self._open_file_handler()
+            self._set_file_formatter()
+            
+            # 콘솔 핸들러 설정
+            self._open_console_handler()
+            self._set_console_formatter()
 
     def _convert_log_level(self, log_level: str) -> int:
         """
@@ -168,4 +169,5 @@ class NewLog:
             self._console_handler = None
 
                 
-
+# 싱글톤 인스턴스 생성
+log = NewLog()
