@@ -7,7 +7,7 @@
     "max_log_size_mb": 10,
     "max_backup_count": 2,
     "encoding": "utf-8",
-    "log_level": "WARNING",
+    "log_level": "DEBUG",
     "enable_performance_logging": true
   },
   "gui": {

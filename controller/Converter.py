@@ -78,63 +78,6 @@ class Converter:
             self.log.error(f"비디오 정보를 가져오는 중 오류 발생: {str(e)}")
             return None
             
-    def download_video(self, url, quality, progress_callback=None, speed_callback=None):
-        """YouTube 비디오를 다운로드합니다."""
-        try:
-            quality_map = {
-                '320K': '320',
-                '256K': '256',
-                '192K': '192',
-                '160K': '160',
-                '128K': '128',
-                '96K': '96',
-                '64K': '64',
-                '48K': '48'
-            }
-            
-            # 임시 파일명 생성
-            temp_filename = f"temp_{int(datetime.now().timestamp())}"
-            temp_path = os.path.join(self.save_path, f"{temp_filename}.%(ext)s")
-            
-            # 커스텀 로거 클래스
-            class MyLogger:
-                def debug(self, msg):
-                    pass
-                def warning(self, msg):
-                    pass
-                def error(self, msg):
-                    pass
-            
-            ydl_opts = {
-                'format': f'bestaudio[abr<={quality_map[quality]}]',
-                'outtmpl': temp_path,
-                'progress_hooks': [lambda d: self._progress_hook(d, progress_callback, speed_callback)],
-                'noplaylist': True,
-                'extract_flat': False,
-                'quiet': True,
-                'no_warnings': True,
-                'noprogress': True,  # 진행률 메시지 출력 비활성화
-                'logger': MyLogger(),  # 커스텀 로거 사용
-                'verbose': False,  # 상세 출력 비활성화
-                'ignoreerrors': False,
-                'force_generic_extractor': False
-            }
-            
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                info = ydl.extract_info(url, download=True)
-                
-                # 다운로드된 파일 경로 찾기
-                downloaded_files = [f for f in os.listdir(self.save_path) if f.startswith(temp_filename)]
-                if not downloaded_files:
-                    raise FileNotFoundError("다운로드된 파일을 찾을 수 없습니다.")
-                    
-                downloaded_file = os.path.join(self.save_path, downloaded_files[0])
-                return downloaded_file, info['title']
-                
-        except Exception as e:
-            self.log.error(f"다운로드 중 오류 발생: {str(e)}")
-            raise
-            
     def convert_to_mp3(self, input_file, title, quality, progress_callback=None):
         """다운로드된 비디오를 MP3로 변환합니다."""
         try:
@@ -233,22 +176,3 @@ class Converter:
         except Exception as e:
             self.log.error(f"변환 중 오류 발생: {str(e)}")
             raise
-            
-    def _progress_hook(self, d, progress_callback, speed_callback):
-        """다운로드 진행 상황을 추적하고 콜백을 호출합니다."""
-        if d['status'] == 'downloading':
-            try:
-                total = d.get('total_bytes', 0)
-                downloaded = d.get('downloaded_bytes', 0)
-                speed = d.get('speed', 0)
-                
-                if total > 0 and progress_callback:
-                    percentage = int((downloaded / total) * 100)
-                    progress_callback(percentage)
-                    
-                if speed and speed_callback:
-                    speed_str = f"{speed/1024/1024:.1f} MB/s"
-                    speed_callback(speed_str)
-                    
-            except Exception as e:
-                self.log.error(f"진행 상황 업데이트 중 오류 발생: {str(e)}") 
