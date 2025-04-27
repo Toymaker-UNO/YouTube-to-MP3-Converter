@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import QMainWindow, QPushButton, QLineEdit, QApplication, Q
 from PyQt5.QtGui import QClipboard
 from PyQt5.QtCore import Qt, QTimer, QThread, pyqtSignal
 from controller.Converter import Converter
+from controller.DownloadYoutubeAudio import DownloadYoutubeAudio
 import os
 from datetime import datetime
 from controller.LogDisplayController import log_display_controller_instance
@@ -51,6 +52,7 @@ class DownloadThread(QThread):
         self.url = url
         self.quality = quality
         self.converter = converter
+        self.downloader = DownloadYoutubeAudio()
         self.current_speed = "0.0 MB/s"
         
     def run(self):
@@ -73,7 +75,7 @@ class DownloadThread(QThread):
             self.progress_updated.emit("다운로드를 시작합니다...", False)
             
             # 다운로드
-            downloaded_file, title = self.converter.download_video(
+            downloaded_file, title = self.downloader.download_audio(
                 url=self.url,
                 quality=self.quality,
                 progress_callback=on_progress,
