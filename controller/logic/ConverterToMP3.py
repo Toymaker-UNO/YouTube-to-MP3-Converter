@@ -2,6 +2,8 @@ import os
 from datetime import datetime
 import ffmpeg
 from model.Log import Log
+import subprocess
+import re
 
 class ConverterToMP3:
     def __init__(self):
@@ -28,22 +30,50 @@ class ConverterToMP3:
             # 임시 MP3 파일 경로
             temp_mp3 = os.path.join(save_path, f"temp_{int(datetime.now().timestamp())}.mp3")
             
-            # ffmpeg-python을 사용하여 변환
-            stream = ffmpeg.input(input_file)
-            stream = ffmpeg.output(
-                stream,
-                temp_mp3,
-                acodec='libmp3lame',
-                audio_bitrate=f'{quality_map[quality]}k',
-                loglevel='info'
+            # ffmpeg 명령어 구성
+            cmd = [
+                'ffmpeg',
+                '-i', input_file,
+                '-acodec', 'libmp3lame',
+                '-b:a', f'{quality_map[quality]}k',
+                '-y',  # 덮어쓰기
+                temp_mp3
+            ]
+            
+            # 진행률 추적을 위한 프로세스 실행
+            process = subprocess.Popen(
+                cmd,
+                stderr=subprocess.PIPE,
+                universal_newlines=True
             )
             
-            # 진행률 콜백을 위한 프로브
-            probe = ffmpeg.probe(input_file)
-            total_duration = float(probe['format']['duration'])
-            
-            # 변환 실행
-            ffmpeg.run(stream, capture_stdout=True, capture_stderr=True)
+            # 진행률 추적
+            duration = None
+            while True:
+                line = process.stderr.readline()
+                if not line and process.poll() is not None:
+                    break
+                    
+                # duration 정보 추출
+                if duration is None and 'Duration:' in line:
+                    match = re.search(r'Duration: (\d{2}):(\d{2}):(\d{2})', line)
+                    if match:
+                        hours, minutes, seconds = map(int, match.groups())
+                        duration = hours * 3600 + minutes * 60 + seconds
+                        
+                # 진행률 정보 추출
+                if duration is not None and 'time=' in line:
+                    match = re.search(r'time=(\d{2}):(\d{2}):(\d{2})', line)
+                    if match:
+                        hours, minutes, seconds = map(int, match.groups())
+                        current_time = hours * 3600 + minutes * 60 + seconds
+                        if progress_callback:
+                            progress = (current_time / duration) * 100
+                            progress_callback(progress)
+                            
+            # 프로세스 종료 확인
+            if process.returncode != 0:
+                raise Exception("ffmpeg 변환 실패")
             
             # 최종 파일명으로 변경
             final_filename = f"{title}.mp3"
