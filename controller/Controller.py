@@ -130,7 +130,7 @@ class Controller:
             self._download_thread = None
             self._setup_event_handlers()
             self._initialized = True
-            uic_log_display_instance.initialize(window)
+            uic_log_display_instance.setup(window)
             self._update_log("URL입력을 기다리고 있습니다.")
 
     def _setup_event_handlers(self):
