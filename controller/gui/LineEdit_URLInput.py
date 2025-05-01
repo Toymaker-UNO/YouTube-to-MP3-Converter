@@ -27,6 +27,7 @@ class LineEdit_URLInput:
             self._url_input = self._window.findChild(QLineEdit, "url_input")
             if self._url_input:
                 self._url_input.setPlaceholderText("Enter YouTube URL here.")
+                self.enable()
             else:
                 print("LineEdit_URLInput 초기화 실패")
 

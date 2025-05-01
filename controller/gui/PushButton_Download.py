@@ -26,7 +26,9 @@ class PushButton_Download:
         with self._lock:
             self._window = window
             self._download = self._window.findChild(QPushButton, "download")
-            if not self._download:
+            if self._download:
+                self.disable()
+            else:
                 print("PushButton_Download 초기화 실패")
 
     def enable(self):

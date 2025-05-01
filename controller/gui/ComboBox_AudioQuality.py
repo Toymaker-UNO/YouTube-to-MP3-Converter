@@ -26,6 +26,7 @@ class ComboBox_AudioQuality:
         with self._lock:
             self._window = window
             self._audio_quality = self._window.findChild(QComboBox, "audio_quality")
+            self.disable()
             if not self._audio_quality:
                 print("ComboBox_AudioQuality 초기화 실패")
 

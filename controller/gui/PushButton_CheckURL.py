@@ -26,7 +26,9 @@ class PushButton_CheckURL:
         with self._lock:
             self._window = window
             self._check_url = self._window.findChild(QPushButton, "check_url")
-            if not self._check_url:
+            if self._check_url:
+                self.enable()
+            else:
                 print("PushButton_CheckURL 초기화 실패")
 
     def enable(self):

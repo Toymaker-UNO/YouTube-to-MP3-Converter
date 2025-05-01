@@ -1,7 +1,7 @@
 import sys
 from view.View import view_instance
 from model.Model import model_instance
-from controller.Controller import controller_instance
+from controller.NewController import new_controller_instance
 
 def main():
     # Model 실행행
@@ -11,7 +11,7 @@ def main():
     app, window = view_instance.run()
 
     # Controller 실행
-    controller_instance.run(window)
+    new_controller_instance.run(window)
     
     # 애플리케이션 실행
     sys.exit(app.exec_())
