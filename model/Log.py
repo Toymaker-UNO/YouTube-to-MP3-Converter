@@ -3,6 +3,8 @@ from typing import Optional
 import logging
 from logging.handlers import RotatingFileHandler
 import datetime
+import inspect
+import os
 
 class MicrosecondFormatter(logging.Formatter):
     def formatTime(self, record, datefmt=None):
@@ -137,7 +139,7 @@ class Log:
         """
         if hasattr(self, '_file_handler'):
             self._file_formatter = MicrosecondFormatter(
-                '[%(asctime)s][%(levelname)s][%(filename)s:%(lineno)d] %(message)s',
+                '[%(asctime)s][%(levelname)s]%(message)s',
                 datefmt='%Y-%m-%d %H:%M:%S.%f'
             )
             self._file_handler.setFormatter(self._file_formatter)
@@ -157,7 +159,7 @@ class Log:
         """
         if hasattr(self, '_console_handler'):
             self._console_formatter = MicrosecondFormatter(
-                '[%(asctime)s][%(levelname)s][%(filename)s:%(lineno)d] %(message)s',
+                '[%(asctime)s][%(levelname)s]%(message)s',
                 datefmt='%Y-%m-%d %H:%M:%S.%f'
             )
             self._console_handler.setFormatter(self._console_formatter)
@@ -182,41 +184,64 @@ class Log:
             del self._console_handler
             self._console_handler = None
 
+    def _get_caller_info(self) -> str:
+        """
+        로그를 호출한 파일과 라인 번호를 반환합니다.
+        """
+        frame = inspect.currentframe()
+        try:
+            # 호출 스택을 거슬러 올라가서 로그를 호출한 위치를 찾습니다
+            while frame:
+                frame = frame.f_back
+                if frame and frame.f_code.co_filename != __file__:
+                    # 파일 경로에서 파일명만 추출
+                    filename = os.path.basename(frame.f_code.co_filename)
+                    return f"{filename}:{frame.f_lineno}"
+        finally:
+            del frame
+        return "unknown:0"
+
     def debug(self, msg: str) -> None:
         """디버그 메시지를 로깅합니다."""
         with self._lock:
             if self._logger and self._enable_logging:
-                self._logger.debug(msg)
+                caller_info = self._get_caller_info()
+                self._logger.debug(f"[{caller_info}] {msg}")
 
     def info(self, msg: str) -> None:
         """정보 메시지를 로깅합니다."""
         with self._lock:
             if self._logger and self._enable_logging:
-                self._logger.info(msg)
+                caller_info = self._get_caller_info()
+                self._logger.info(f"[{caller_info}] {msg}")
 
     def warning(self, msg: str) -> None:
         """경고 메시지를 로깅합니다."""
         with self._lock:
             if self._logger and self._enable_logging:
-                self._logger.warning(msg)
+                caller_info = self._get_caller_info()
+                self._logger.warning(f"[{caller_info}] {msg}")
 
     def error(self, msg: str) -> None:
         """오류 메시지를 로깅합니다."""
         with self._lock:
             if self._logger and self._enable_logging:
-                self._logger.error(msg)
+                caller_info = self._get_caller_info()
+                self._logger.error(f"[{caller_info}] {msg}")
 
     def critical(self, msg: str) -> None:
         """심각한 오류 메시지를 로깅합니다."""
         with self._lock:
             if self._logger and self._enable_logging:
-                self._logger.critical(msg)
+                caller_info = self._get_caller_info()
+                self._logger.critical(f"[{caller_info}] {msg}")
 
     def exception(self, msg: str) -> None:
         """예외 정보를 로깅합니다."""
         with self._lock:
             if self._logger and self._enable_logging:
-                self._logger.exception(msg)
+                caller_info = self._get_caller_info()
+                self._logger.exception(f"[{caller_info}] {msg}")
                 
 # 싱글톤 인스턴스 생성
 log = Log()
