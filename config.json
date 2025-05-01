@@ -1,6 +1,6 @@
 {
   "logging": {
-    "enable_logging": true,
+    "enable_logging": false,
     "log_file": "youtube_to_mp3.log.txt",
     "max_log_size_mb": 10,
     "max_backup_count": 2,

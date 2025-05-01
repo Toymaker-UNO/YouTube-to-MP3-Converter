@@ -5,7 +5,7 @@ from controller.Converter import Converter
 from controller.DownloadYoutubeAudio import DownloadYoutubeAudio
 import os
 from datetime import datetime
-from controller.UICLogDisplay import uic_log_display_instance
+from controller.gui.LogDisplay import uic_log_display_instance
 
 # 전역 상수 정의
 URL_CHECK_DELAY_MS = 1000  # URL 검사 타이머 지연 시간 (밀리초)

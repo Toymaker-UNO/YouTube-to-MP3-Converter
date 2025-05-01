@@ -6,7 +6,7 @@ import threading
 TIME_STRING_LENGTH = 24
 LOG_DISPLAY_WINDOW_WIDTH = 88
 
-class UICLogDisplay:
+class LogDisplay:
     """로그 디스플레이를 관리하는 컨트롤러 클래스"""
     
     _instance = None
@@ -16,17 +16,17 @@ class UICLogDisplay:
         if cls._instance is None:
             with cls._lock:
                 if cls._instance is None:  # Double-checked locking
-                    cls._instance = super(UICLogDisplay, cls).__new__(cls)
+                    cls._instance = super(LogDisplay, cls).__new__(cls)
         return cls._instance
     
     def __init__(self):
-        """UICLogDisplay 초기화"""
+        """LogDisplay 초기화"""
         self._window = None
         self._log_display = None
         self._contents = []  # 문자열을 저장하는 리스트
         
     def setup(self, window: QMainWindow):
-        """UICLogDisplay를 초기화합니다.
+        """LogDisplay를 초기화합니다.
         
         Args:
             window (QMainWindow): 메인 윈도우 객체
@@ -147,4 +147,4 @@ class UICLogDisplay:
 
 
 # 싱글톤 인스턴스 생성
-uic_log_display_instance = UICLogDisplay()
+log_display_instance = LogDisplay()
