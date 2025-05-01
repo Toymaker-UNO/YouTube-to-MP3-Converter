@@ -70,13 +70,12 @@ class PushButton_CheckURL:
         log.debug("버튼 클릭: [" + name + "]")
 
         if name == "Check URL":
-            self._do_check_url()
+            self._check_url_button_clicked()
         else:
-            self._button_mode_change_check_url()
+            self._change_url_button_clicked()
 
-    def _do_check_url(self):
+    def _check_url_button_clicked(self):
         """URL 검사 수행"""
-        log.debug("버튼 클릭 (Check URL)")
         url = line_edit_url_input_instance.get_url()
         
         if not check_url_instance.is_valid_youtube_url(url):
@@ -98,6 +97,9 @@ class PushButton_CheckURL:
         self.disable()
         line_edit_url_input_instance.disable()
         plain_text_edit_log_display_instance.print_next_line("제목을 가져오는 중...")
+
+    def _change_url_button_clicked(self):
+        self._button_mode_change_check_url()
         
     def _handle_title_fetched(self, title, success):
         """제목 가져오기 완료 핸들러"""
