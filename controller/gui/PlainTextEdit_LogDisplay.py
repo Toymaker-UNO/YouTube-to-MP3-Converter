@@ -6,7 +6,7 @@ import threading
 TIME_STRING_LENGTH = 24
 LOG_DISPLAY_WINDOW_WIDTH = 88
 
-class LogDisplay:
+class PlainTextEdit_LogDisplay:
     """로그 디스플레이를 관리하는 컨트롤러 클래스"""
     
     _instance = None
@@ -15,17 +15,17 @@ class LogDisplay:
     def __new__(cls):
         with cls._lock:
             if cls._instance is None:  # Double-checked locking
-                cls._instance = super(LogDisplay, cls).__new__(cls)
+                cls._instance = super(PlainTextEdit_LogDisplay, cls).__new__(cls)
         return cls._instance
     
     def __init__(self):
-        """LogDisplay 초기화"""
+        """PlainTextEdit_LogDisplay 초기화"""
         self._window = None
         self._log_display = None
         self._contents = []  # 문자열을 저장하는 리스트
         
     def setup(self, window: QMainWindow):
-        """LogDisplay를 초기화합니다.
+        """PlainTextEdit_LogDisplay를 초기화합니다.
         
         Args:
             window (QMainWindow): 메인 윈도우 객체
@@ -148,4 +148,4 @@ class LogDisplay:
 
 
 # 싱글톤 인스턴스 생성
-log_display_instance = LogDisplay()
+plain_text_edit_log_display_instance = PlainTextEdit_LogDisplay()

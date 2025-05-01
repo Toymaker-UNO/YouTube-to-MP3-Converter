@@ -1,7 +1,7 @@
 from controller.logic.YoutubeTitle import YoutubeTitle
 from controller.logic.DownloadYoutubeAudio import DownloadYoutubeAudio
 from controller.logic.ConverterToMP3 import ConverterToMP3
-from controller.gui.LogDisplay import log_display_instance
+from controller.gui.PlainTextEdit_LogDisplay import log_display_instance
 import os
 
 def test_youtube_download_and_convert():

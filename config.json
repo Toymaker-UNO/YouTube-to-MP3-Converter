@@ -154,7 +154,7 @@
     ],
     "push_buttons": [
       {
-        "id": "check_url_button",
+        "id": "check_url",
         "position": {
           "x": "620px",
           "y": "30px",
