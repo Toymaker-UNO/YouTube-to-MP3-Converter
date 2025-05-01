@@ -43,20 +43,43 @@ class PushButton_CheckURL:
     def disable(self):
         self._check_url.setEnabled(False)
 
+    def _get_text(self):
+        return self._check_url.text()
+    
+    #버튼의 text 를 변경하는 함수
+    def _set_text(self, text):
+        self._check_url.setText(text)
+
     def _handle_check_url_click(self):
         """URL 검사 버튼 클릭 이벤트 핸들러"""
-        log.debug("URL 검사 버튼 클릭")
-            
+        name = self._get_text()
+        log.debug("버튼 클릭: [" + name + "]")
+
+        if name == "Check URL":
+            self._do_check_url()
+        else:
+            self._do_change_url()
+
+    def _do_check_url(self):
+        log.debug("버튼 클릭 (Check URL)")
         url = line_edit_url_input_instance.get_url()
         if check_url_instance.is_valid_youtube_url(url):
             log.debug("유효한 URL입니다.")
             plain_text_edit_log_display_instance.print_next_line("유효한 URL입니다.")
             combo_box_audio_quality_instance.enable()
             push_button_download_instance.enable()
-            self.disable()
+            line_edit_url_input_instance.disable()
+            self._set_text("Change URL")
         else:
             log.debug("유효하지 않은 URL입니다.")
             plain_text_edit_log_display_instance.print_next_line("유효하지 않은 URL입니다.")
+        
+    def _do_change_url(self):
+        log.debug("버튼 클릭 (ChangeURL)")
+        line_edit_url_input_instance.enable()
+        self._set_text("Check URL")
+        combo_box_audio_quality_instance.disable()
+        push_button_download_instance.disable()
 
 # 싱글톤 인스턴스 생성
 push_button_check_url_instance = PushButton_CheckURL()
