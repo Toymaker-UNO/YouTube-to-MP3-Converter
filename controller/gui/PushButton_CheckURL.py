@@ -64,12 +64,19 @@ class PushButton_CheckURL:
     def _do_check_url(self):
         url = line_edit_url_input_instance.get_url()
         if check_url_instance.is_valid_youtube_url(url):
-            log.debug("유효한 URL입니다.")
-            plain_text_edit_log_display_instance.print_next_line("유효한 URL입니다.")
-            combo_box_audio_quality_instance.enable()
-            push_button_download_instance.enable()
-            line_edit_url_input_instance.disable()
-            self._set_text("Change URL")
+            title = youtube_title_instance.get(url)
+            if title:
+                log.debug("유효한 URL입니다.")
+                log.debug("Title: " + title)
+                plain_text_edit_log_display_instance.print_next_line("유효한 URL입니다.")
+                plain_text_edit_log_display_instance.print_next_line("Title: " + title)
+                combo_box_audio_quality_instance.enable()
+                push_button_download_instance.enable()
+                line_edit_url_input_instance.disable()
+                self._set_text("Change URL")
+            else:
+                log.debug("유효하지 않은 URL입니다.")
+                plain_text_edit_log_display_instance.print_next_line("유효하지 않은 URL입니다.")
         else:
             log.debug("유효하지 않은 URL입니다.")
             plain_text_edit_log_display_instance.print_next_line("유효하지 않은 URL입니다.")

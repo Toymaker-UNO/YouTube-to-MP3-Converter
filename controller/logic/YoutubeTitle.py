@@ -1,7 +1,17 @@
 import yt_dlp
 from model.Log import log
+import threading
 
 class YoutubeTitle:
+    _instance = None
+    _lock = threading.Lock()
+    
+    def __new__(cls):
+        with cls._lock:
+            if cls._instance is None:
+                cls._instance = super(YoutubeTitle, cls).__new__(cls)
+        return cls._instance
+    
     def __init__(self):
         pass
         
@@ -44,4 +54,7 @@ class YoutubeTitle:
                 
         except Exception as e:
             log.error(f"비디오 정보를 가져오는 중 오류 발생: {str(e)}")
-            return None 
+            return None
+
+# 싱글톤 인스턴스 생성
+youtube_title_instance = YoutubeTitle() 
