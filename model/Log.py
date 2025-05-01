@@ -2,6 +2,17 @@ import threading
 from typing import Optional
 import logging
 from logging.handlers import RotatingFileHandler
+import datetime
+
+class MicrosecondFormatter(logging.Formatter):
+    def formatTime(self, record, datefmt=None):
+        ct = datetime.datetime.fromtimestamp(record.created)
+        if datefmt:
+            s = ct.strftime(datefmt)
+        else:
+            t = ct.strftime("%Y-%m-%d %H:%M:%S")
+            s = "%s.%03d" % (t, record.msecs)
+        return s
 
 class Log:
     _instance: Optional['Log'] = None
@@ -125,8 +136,8 @@ class Log:
         상세한 로그 정보를 포함합니다.
         """
         if hasattr(self, '_file_handler'):
-            self._file_formatter = logging.Formatter(
-                '%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s',
+            self._file_formatter = MicrosecondFormatter(
+                '[%(asctime)s][%(levelname)s][%(filename)s:%(lineno)d] %(message)s',
                 datefmt='%Y-%m-%d %H:%M:%S.%f'
             )
             self._file_handler.setFormatter(self._file_formatter)
@@ -145,8 +156,8 @@ class Log:
         간단하고 가독성 있는 형식을 사용합니다.
         """
         if hasattr(self, '_console_handler'):
-            self._console_formatter = logging.Formatter(
-                '%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s',
+            self._console_formatter = MicrosecondFormatter(
+                '[%(asctime)s][%(levelname)s][%(filename)s:%(lineno)d] %(message)s',
                 datefmt='%Y-%m-%d %H:%M:%S.%f'
             )
             self._console_handler.setFormatter(self._console_formatter)
