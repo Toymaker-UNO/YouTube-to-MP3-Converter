@@ -7,6 +7,7 @@ from controller.gui.PlainTextEdit_LogDisplay import plain_text_edit_log_display_
 from controller.logic.CheckURL import check_url_instance
 import threading
 from model.Log import log
+from controller.logic.YoutubeTitle import youtube_title_instance
 
 class PushButton_CheckURL:
     _instance = None
@@ -61,7 +62,6 @@ class PushButton_CheckURL:
             self._do_change_url()
 
     def _do_check_url(self):
-        log.debug("버튼 클릭 (Check URL)")
         url = line_edit_url_input_instance.get_url()
         if check_url_instance.is_valid_youtube_url(url):
             log.debug("유효한 URL입니다.")
@@ -75,7 +75,6 @@ class PushButton_CheckURL:
             plain_text_edit_log_display_instance.print_next_line("유효하지 않은 URL입니다.")
         
     def _do_change_url(self):
-        log.debug("버튼 클릭 (ChangeURL)")
         line_edit_url_input_instance.enable()
         self._set_text("Check URL")
         combo_box_audio_quality_instance.disable()

@@ -41,7 +41,8 @@ class PushButton_Download:
 
     def _handle_download_click(self):
         """다운로드 버튼 클릭 이벤트 핸들러"""
-        pass
+        log.debug("버튼 클릭 [Download]")
+        
 
 # 싱글톤 인스턴스 생성
 push_button_download_instance = PushButton_Download()

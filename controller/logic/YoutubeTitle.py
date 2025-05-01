@@ -1,9 +1,9 @@
 import yt_dlp
-from model.Log import Log
+from model.Log import log
 
 class YoutubeTitle:
     def __init__(self):
-        self.log = Log()
+        pass
         
     def get(self, url):
         """YouTube URL에서 비디오 제목을 가져옵니다."""
@@ -29,19 +29,19 @@ class YoutubeTitle:
                 info = ydl.extract_info(url, download=False)
                 
                 if info is None:
-                    self.log.error("비디오 정보를 추출할 수 없습니다.")
+                    log.error("비디오 정보를 추출할 수 없습니다.")
                     return None
                     
                 if 'entries' in info:  # 플레이리스트인 경우
-                    self.log.error("플레이리스트 URL은 지원하지 않습니다.")
+                    log.error("플레이리스트 URL은 지원하지 않습니다.")
                     return None
                         
                 if 'title' not in info:
-                    self.log.error("제목 정보가 없습니다.")
+                    log.error("제목 정보가 없습니다.")
                     return None
                     
                 return info['title']
                 
         except Exception as e:
-            self.log.error(f"비디오 정보를 가져오는 중 오류 발생: {str(e)}")
+            log.error(f"비디오 정보를 가져오는 중 오류 발생: {str(e)}")
             return None 
