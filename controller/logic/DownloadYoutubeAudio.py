@@ -1,9 +1,19 @@
 import yt_dlp
 import os
+import threading
 from datetime import datetime
 from model.Log import log
 
 class DownloadYoutubeAudio:
+    _instance = None
+    _lock = threading.Lock()
+    
+    def __new__(cls):
+        with cls._lock:
+            if cls._instance is None:
+                cls._instance = super(DownloadYoutubeAudio, cls).__new__(cls)
+        return cls._instance
+    
     def __init__(self):
         pass
             
@@ -89,4 +99,7 @@ class DownloadYoutubeAudio:
                     speed_callback(speed_str)
                     
             except Exception as e:
-                log.error(f"진행 상황 업데이트 중 오류 발생: {str(e)}") 
+                log.error(f"진행 상황 업데이트 중 오류 발생: {str(e)}")
+
+# 싱글톤 인스턴스 생성
+download_youtube_audio_instance = DownloadYoutubeAudio() 
