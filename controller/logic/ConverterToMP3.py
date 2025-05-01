@@ -4,10 +4,20 @@ import ffmpeg
 from model.Log import Log
 import subprocess
 import re
+import threading
 
 class ConverterToMP3:
+    _instance = None
+    _lock = threading.Lock()
+
+    def __new__(cls) -> 'ConverterToMP3':
+        with cls._lock:
+            if cls._instance is None:
+                cls._instance = super(ConverterToMP3, cls).__new__(cls)
+        return cls._instance
+
     def __init__(self):
-        self.log = Log()
+        pass
             
     def convert(self, input_file, title, quality, save_path, progress_callback=None):
         """다운로드된 비디오를 MP3로 변환합니다."""
@@ -97,3 +107,6 @@ class ConverterToMP3:
         except Exception as e:
             self.log.error(f"변환 중 오류 발생: {str(e)}")
             raise 
+
+# 싱글톤 인스턴스 생성
+converter_to_mp3_instance = ConverterToMP3()

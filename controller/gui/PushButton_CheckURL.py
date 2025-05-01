@@ -10,8 +10,9 @@ from model.Log import log
 from controller.logic.YoutubeTitle import youtube_title_instance
 
 class TitleFetchThread(QThread):
-    """YouTube 제목을 가져오는 스레드"""
-    title_fetched = pyqtSignal(str, bool)  # (제목, 성공 여부)
+    get_title_success = pyqtSignal(str)
+    get_title_failed = pyqtSignal(str)
+    error_occurred = pyqtSignal(str)
     
     def __init__(self, url):
         super().__init__()
@@ -21,12 +22,12 @@ class TitleFetchThread(QThread):
         try:
             title = youtube_title_instance.get(self.url)
             if title:
-                self.title_fetched.emit(title, True)
+                self.get_title_success.emit(title)
             else:
-                self.title_fetched.emit("제목을 가져올 수 없습니다.", False)
+                self.get_title_failed.emit("제목을 가져올 수 없습니다.")
         except Exception as e:
             log.error(f"제목 가져오기 중 오류 발생: {str(e)}")
-            self.title_fetched.emit(f"오류 발생: {str(e)}", False)
+            self.error_occurred.emit(f"오류 발생: {str(e)}")
 
 class PushButton_CheckURL:
     _instance = None
@@ -90,7 +91,9 @@ class PushButton_CheckURL:
             
         # 새 스레드 생성 및 시작
         self._title_fetch_thread = TitleFetchThread(url)
-        self._title_fetch_thread.title_fetched.connect(self._handle_title_fetched)
+        self._title_fetch_thread.get_title_success.connect(self._thread_get_title_success)
+        self._title_fetch_thread.get_title_failed.connect(self._thread_get_title_failed)
+        self._title_fetch_thread.error_occurred.connect(self._thread_error_occurred)
         self._title_fetch_thread.start()
         
         # UI 상태 업데이트
@@ -100,28 +103,35 @@ class PushButton_CheckURL:
 
     def _change_url_button_clicked(self):
         self._button_mode_change_check_url()
-        
-    def _handle_title_fetched(self, title, success):
-        """제목 가져오기 완료 핸들러"""
-        plain_text_edit_log_display_instance.print_next_line("제목: " + title)
-        
-        if success:
-            self._button_mode_change_change_url()
-        else:
-            self._button_mode_change_check_url()            
-        self.enable()
 
+    def _thread_get_title_success(self, title):
+        """제목 가져오기 성공 핸들러"""
+        plain_text_edit_log_display_instance.print_next_line("제목: " + title)
+        self._button_mode_change_change_url()
+
+    def _thread_get_title_failed(self, message):
+        """제목 가져오기 실패 핸들러"""
+        plain_text_edit_log_display_instance.print_next_line(message)
+        self._button_mode_change_check_url()
+
+    def _thread_error_occurred(self, message):
+        """오류 발생 핸들러"""
+        plain_text_edit_log_display_instance.print_next_line(message)
+        self._button_mode_change_check_url()
+        
     def _button_mode_change_check_url(self):
         line_edit_url_input_instance.enable()
         combo_box_audio_quality_instance.disable()
         push_button_download_instance.disable()
         self._check_url.setText("Check URL")
+        self.enable()
 
     def _button_mode_change_change_url(self):
         line_edit_url_input_instance.disable()
         combo_box_audio_quality_instance.enable()
         push_button_download_instance.enable()
         self._check_url.setText("Change URL")
+        self.enable()
 
 # 싱글톤 인스턴스 생성
 push_button_check_url_instance = PushButton_CheckURL()

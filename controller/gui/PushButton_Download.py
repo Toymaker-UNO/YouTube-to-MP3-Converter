@@ -7,11 +7,12 @@ from controller.gui.ComboBox_AudioQuality import combo_box_audio_quality_instanc
 from controller.gui.PlainTextEdit_LogDisplay import plain_text_edit_log_display_instance
 from controller.logic.DownloadYoutubeAudio import download_youtube_audio_instance
 from controller.logic.DirectoryManager import directory_manager_instance
+from controller.logic.ConverterToMP3 import converter_to_mp3_instance
 
 class DownloadThread(QThread):
     """다운로드 작업을 처리하는 스레드"""
     progress_updated = pyqtSignal(str)  # 진행 상황 메시지
-    download_completed = pyqtSignal()  # 완료 메시지
+    download_completed = pyqtSignal(str, str)  # 완료 메시지
     error_occurred = pyqtSignal(str)    # 오류 메시지
 
     def __init__(self, url, quality, save_path):
@@ -42,8 +43,43 @@ class DownloadThread(QThread):
             )
 
             # 다운로드 완료 메시지
-            self.download_completed.emit()
+            self.download_completed.emit(downloaded_file, title)
             
+        except Exception as e:
+            self.error_occurred.emit(f"오류가 발생했습니다: {str(e)}")
+
+class ConvertThread(QThread):
+    """MP3 변환 작업을 처리하는 스레드"""
+    progress_updated = pyqtSignal(str)  # 진행 상황 메시지
+    convert_completed = pyqtSignal(str)  # 완료 메시지
+    error_occurred = pyqtSignal(str)    # 오류 메시지
+
+    def __init__(self, input_file, title, quality, save_path):
+        super().__init__()
+        self.input_file = input_file
+        self.title = title
+        self.quality = quality
+        self.save_path = save_path
+
+    def run(self):
+        try:
+            # 진행 상황 콜백 함수
+            def on_progress(percentage):
+                progress_text = "MP3변환: " + plain_text_edit_log_display_instance.create_progress_bar(round(percentage, 2))
+                self.progress_updated.emit(progress_text)
+
+            # MP3 변환
+            self._final_path = converter_to_mp3_instance.convert(
+                input_file=self.input_file,
+                title=self.title,
+                quality=self.quality,
+                save_path=self.save_path,
+                progress_callback=on_progress
+            )   
+
+            # 변환 완료 메시지
+            self.convert_completed.emit(self._final_path)
+
         except Exception as e:
             self.error_occurred.emit(f"오류가 발생했습니다: {str(e)}")
 
@@ -61,6 +97,7 @@ class PushButton_Download:
         self._window = None
         self._download_button = None
         self._download_thread = None
+        self._convert_thread = None
 
     def setup(self, window: QMainWindow):
         """PushButton_Download를 초기화합니다.
@@ -87,14 +124,11 @@ class PushButton_Download:
         """다운로드 버튼 클릭 이벤트 핸들러"""
         log.debug("버튼 클릭 [Download]")
         self._all_buttons_disable()
-        self._download_youtube_audio()
-        
-    def _download_youtube_audio(self):
-        """YouTube 오디오를 다운로드합니다."""
+
         try:
-            url = line_edit_url_input_instance.get_url()
-            quality = combo_box_audio_quality_instance.get_selected_quality()
-            save_path = directory_manager_instance.make_download_directory()
+            self._url = line_edit_url_input_instance.get_url()
+            self._quality = combo_box_audio_quality_instance.get_selected_quality()
+            self._save_path = directory_manager_instance.make_download_directory()
                 
             plain_text_edit_log_display_instance.print_next_line("다운로드를 시작합니다.")
             plain_text_edit_log_display_instance.print_next_line("다운로드 준비 중...")
@@ -103,30 +137,45 @@ class PushButton_Download:
             if self._download_thread and self._download_thread.isRunning():
                 self._download_thread.terminate()
                 self._download_thread.wait()
-            
-            self._download_thread = DownloadThread(url, quality, save_path)
-            self._download_thread.progress_updated.connect(self._download_progress_updated)
+
+            self._download_thread = DownloadThread(self._url, self._quality, self._save_path)
+            self._download_thread.progress_updated.connect(self._progress_updated)
             self._download_thread.download_completed.connect(self._download_completed)
-            self._download_thread.error_occurred.connect(self._download_error_occurred)
+            self._download_thread.error_occurred.connect(self._error_occurred)
             self._download_thread.start()
                 
         except Exception as e:
             log.error(f"다운로드 중 오류 발생: {str(e)}")
             plain_text_edit_log_display_instance.print_next_line(f"오류 발생: {str(e)}")
             self._all_buttons_enable()
-
-    def _download_progress_updated(self, message):
-        """다운로드 진행 상황 핸들러"""
-        plain_text_edit_log_display_instance.print_current_line(message)
-            
-    def _download_completed(self):
+   
+    def _download_completed(self, downloaded_file, title):
         """다운로드 완료 핸들러"""
         plain_text_edit_log_display_instance.print_next_line("다운로드 완료!")
-        self._all_buttons_enable()
+        plain_text_edit_log_display_instance.print_next_line("MP3 변환을 시작합니다.")
+        plain_text_edit_log_display_instance.print_next_line("MP3 변환 준비 중...")
 
-    def _download_error_occurred(self, message):
-        """다운로드 오류 핸들러"""
-        log.error(f"다운로드 중 오류 발생: {message}")
+        # 이전 스레드가 실행 중이면 종료            # 이전 스레드가 실행 중이면 종료
+        if self._convert_thread and self._convert_thread.isRunning():
+            self._convert_thread.terminate()
+            self._convert_thread.wait()
+
+        self._convert_thread = ConvertThread(downloaded_file, title, self._quality, self._save_path)
+        self._convert_thread.progress_updated.connect(self._progress_updated)
+        self._convert_thread.convert_completed.connect(self._convert_completed)
+        self._convert_thread.error_occurred.connect(self._error_occurred)
+        self._convert_thread.start()
+
+    def _convert_completed(self, final_path):
+        """MP3 변환 완료 핸들러"""
+        plain_text_edit_log_display_instance.print_next_line("MP3 변환 완료!")
+        plain_text_edit_log_display_instance.print_next_line("저장 경로: " + final_path)
+
+    def _progress_updated(self, message):
+        plain_text_edit_log_display_instance.print_current_line(message)
+
+    def _error_occurred(self, message):
+        log.error(f"오류 발생: {message}")
         plain_text_edit_log_display_instance.print_next_line(f"오류 발생: {message}")
         self._all_buttons_enable()
 
