@@ -5,12 +5,10 @@ import os
 import time
 import ffmpeg
 from model.Log import Log
-import subprocess
+from controller.YoutubeTitle import YoutubeTitle
 
 class Converter:
-    def __init__(self, ffmpeg_path=None, save_path=None):
-        self.ffmpeg_path = ffmpeg_path or "ffmpeg"  # 시스템 PATH에서 ffmpeg를 찾음
-        
+    def __init__(self, save_path=None):
         # 저장 경로 설정
         if save_path is None:
             self.save_path = os.path.join(os.getcwd(), 'downloads')
@@ -22,6 +20,7 @@ class Converter:
             os.makedirs(self.save_path)
             
         self.log = Log()
+        self.youtube_title = YoutubeTitle()
         
     def sanitize_filename(self, filename):
         """파일 이름에서 특수 문자를 제거합니다."""
@@ -34,49 +33,11 @@ class Converter:
         
     def is_valid_youtube_url(self, url):
         """YouTube URL의 유효성을 검사합니다."""
-        youtube_regex = r'(https?://)?(www\.)?(youtube|youtu|youtube-nocookie)\.(com|be)/(watch\?v=|embed/|v/|.+\?v=)?([^"&?/s]{11})'
-        return bool(re.match(youtube_regex, url))
+        return self.youtube_title.is_valid_url(url)
         
     def get_video_title(self, url):
         """YouTube URL에서 비디오 제목을 가져옵니다."""
-        try:
-            # URL 정규화
-            if 'youtu.be' in url:
-                video_id = url.split('youtu.be/')[-1].split('?')[0]
-                url = f'https://www.youtube.com/watch?v={video_id}'
-            elif '&' in url:
-                url = url.split('&')[0]
-                
-            ydl_opts = {
-                'quiet': True,
-                'no_warnings': True,
-                'extract_flat': False,
-                'noplaylist': True,
-                'ignoreerrors': False,
-                'verbose': False,
-                'force_generic_extractor': False
-            }
-            
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                info = ydl.extract_info(url, download=False)
-                
-                if info is None:
-                    self.log.error("비디오 정보를 추출할 수 없습니다.")
-                    return None
-                    
-                if 'entries' in info:  # 플레이리스트인 경우
-                    self.log.error("플레이리스트 URL은 지원하지 않습니다.")
-                    return None
-                        
-                if 'title' not in info:
-                    self.log.error("제목 정보가 없습니다.")
-                    return None
-                    
-                return info['title']
-                
-        except Exception as e:
-            self.log.error(f"비디오 정보를 가져오는 중 오류 발생: {str(e)}")
-            return None
+        return self.youtube_title.get(url)
             
     def convert_to_mp3(self, input_file, title, quality, progress_callback=None):
         """다운로드된 비디오를 MP3로 변환합니다."""
@@ -95,65 +56,23 @@ class Converter:
             # 임시 MP3 파일 경로
             temp_mp3 = os.path.join(self.save_path, f"temp_{int(datetime.now().timestamp())}.mp3")
             
-            # ffmpeg 명령어 구성
-            cmd = [
-                self.ffmpeg_path,
-                '-i', input_file,
-                '-progress', 'pipe:1',
-                '-f', 'mp3',
-                '-acodec', 'libmp3lame',
-                '-ab', f'{quality_map[quality]}k',
-                '-loglevel', 'info',
-                temp_mp3
-            ]
-            
-            # subprocess로 ffmpeg 실행
-            process = subprocess.Popen(
-                cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                universal_newlines=True,
-                bufsize=1
+            # ffmpeg-python을 사용하여 변환
+            stream = ffmpeg.input(input_file)
+            stream = ffmpeg.output(
+                stream,
+                temp_mp3,
+                acodec='libmp3lame',
+                audio_bitrate=f'{quality_map[quality]}k',
+                loglevel='info'
             )
             
-            # 전체 시간 가져오기
-            total_duration = None
-            while True:
-                line = process.stderr.readline()
-                if not line:
-                    break
-                    
-                if 'Duration:' in line:
-                    # Duration: 00:05:23.17 형식에서 시간 추출
-                    duration_str = line.split('Duration:')[1].split(',')[0].strip()
-                    h, m, s = duration_str.split(':')
-                    total_duration = int(h) * 3600 + int(m) * 60 + float(s)
-                    break
+            # 진행률 콜백을 위한 프로브
+            probe = ffmpeg.probe(input_file)
+            total_duration = float(probe['format']['duration'])
             
-            # 진행률 정보 출력
-            while True:
-                line = process.stdout.readline()
-                if not line:
-                    break
-                    
-                if '=' in line:
-                    key, value = line.strip().split('=', 1)
-                    if key == 'out_time':
-                        # 시간 정보를 초로 변환
-                        h, m, s = value.split(':')
-                        current_time = int(h) * 3600 + int(m) * 60 + float(s)
-                        
-                        # 진행률 계산 및 콜백 호출
-                        if total_duration and progress_callback:
-                            percentage = (current_time / total_duration) * 100
-                            progress_callback(percentage)
-                
-            # 프로세스 종료 대기
-            process.wait()
+            # 변환 실행
+            ffmpeg.run(stream, capture_stdout=True, capture_stderr=True)
             
-            if process.returncode != 0:
-                raise Exception(f"FFmpeg 변환 실패: {process.stderr.read()}")
-                
             # 최종 파일명으로 변경
             final_filename = f"{self.sanitize_filename(title)}.mp3"
             final_path = os.path.join(self.save_path, final_filename)

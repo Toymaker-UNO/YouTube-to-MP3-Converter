@@ -1,6 +1,4 @@
 {
-  "ffmpeg_path": "D:/01 Isla_Sorna/YouTube-to-MP3-Converter/ffmpeg-7.1.1-essentials_build/bin/ffmpeg.exe",
-  "save_path": "C:/Users/storm/Downloads",
   "logging": {
     "enable_logging": true,
     "log_file": "youtube_to_mp3.log.txt",
