@@ -1,7 +1,7 @@
 from controller.logic.YoutubeTitle import YoutubeTitle
 from controller.logic.DownloadYoutubeAudio import DownloadYoutubeAudio
 from controller.logic.ConverterToMP3 import ConverterToMP3
-from controller.gui.PlainTextEdit_LogDisplay import log_display_instance
+from controller.gui.PlainTextEdit_LogDisplay import plain_text_edit_log_display_instance
 import os
 
 def test_youtube_download_and_convert():
@@ -31,7 +31,7 @@ def test_youtube_download_and_convert():
     try:
         # 다운로드 진행 상황 콜백 함수
         def on_progress(percentage):
-            progress_text = "다운로드: " + log_display_instance.create_progress_bar(percentage)
+            progress_text = "다운로드: " + plain_text_edit_log_display_instance.create_progress_bar(percentage)
             print(progress_text)
             
         def on_speed(speed):
@@ -53,7 +53,7 @@ def test_youtube_download_and_convert():
         
         # MP3 변환 진행 상황 콜백 함수
         def on_convert_progress(percentage):
-            progress_text = "MP3변환: " + log_display_instance.create_progress_bar(round(percentage, 2))
+            progress_text = "MP3변환: " + plain_text_edit_log_display_instance.create_progress_bar(round(percentage, 2))
             print(progress_text)
             
         # MP3 변환

@@ -35,7 +35,7 @@
         "start_delay": 100
       },
       "customizing": {
-        "title": "YouTube to MP3 Converter",
+        "title": "YouTube to MP3",
         "icon_path": "resources/icon.png"
       }
     },
@@ -237,7 +237,7 @@
     ],
     "combo_boxes": [
       {
-        "id": "quality_combo",
+        "id": "audio_quality",
         "position": {
           "x": "150px",
           "y": "70px",
