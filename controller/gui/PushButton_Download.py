@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QPushButton, QMainWindow
 from PyQt5.QtCore import QObject, pyqtSignal
 import threading
+from model.Log import log_instance
 
 class PushButton_Download:
     _instance = None
@@ -30,7 +31,7 @@ class PushButton_Download:
                 self._download.clicked.connect(self._handle_download_click)
                 self.disable()
             else:
-                print("PushButton_Download 초기화 실패")
+                log_instance.critical("PushButton_Download 초기화 실패")
 
     def enable(self):
         self._download.setEnabled(True)

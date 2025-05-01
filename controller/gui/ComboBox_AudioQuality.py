@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QComboBox, QMainWindow
 from PyQt5.QtCore import QObject, pyqtSignal
 import threading
+from model.Log import log_instance
 
 class ComboBox_AudioQuality:
     _instance = None
@@ -28,7 +29,7 @@ class ComboBox_AudioQuality:
             self._audio_quality = self._window.findChild(QComboBox, "audio_quality")
             self.disable()
             if not self._audio_quality:
-                print("ComboBox_AudioQuality 초기화 실패")
+                log_instance.critical ("ComboBox_AudioQuality 초기화 실패")
 
     def enable(self):
         self._audio_quality.setEnabled(True)
