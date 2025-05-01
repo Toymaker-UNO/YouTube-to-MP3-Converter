@@ -13,10 +13,9 @@ class LogDisplay:
     _lock = threading.Lock()  # 클래스 레벨의 Lock
     
     def __new__(cls):
-        if cls._instance is None:
-            with cls._lock:
-                if cls._instance is None:  # Double-checked locking
-                    cls._instance = super(LogDisplay, cls).__new__(cls)
+        with cls._lock:
+            if cls._instance is None:  # Double-checked locking
+                cls._instance = super(LogDisplay, cls).__new__(cls)
         return cls._instance
     
     def __init__(self):
@@ -37,6 +36,8 @@ class LogDisplay:
             if self._log_display:
                 # 가로 스크롤바가 생성되지 않도록 자동 줄바꿈 설정
                 self._log_display.setLineWrapMode(QPlainTextEdit.WidgetWidth)
+            else:
+                print("LogDisplay 초기화 실패")
 
     def print_next_line(self, message: str):
         """다음 라인에 로그 메시지를 출력합니다.

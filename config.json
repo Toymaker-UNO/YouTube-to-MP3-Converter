@@ -154,7 +154,7 @@
     ],
     "push_buttons": [
       {
-        "id": "paste_button",
+        "id": "check_url_button",
         "position": {
           "x": "620px",
           "y": "30px",
@@ -188,9 +188,9 @@
           "start_delay": 0
         },
         "customizing": {
-          "text": "Paste from Clipboard",
-          "icon_path": "resources/download.png",
-          "tooltip": "Paste URL from clipboard"
+          "text": "Check URL",
+          "icon_path": "resources/check_url_button.png",
+          "tooltip": "Check URL"
         }
       },
       {
