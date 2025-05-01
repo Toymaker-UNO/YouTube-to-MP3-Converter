@@ -194,7 +194,7 @@
         }
       },
       {
-        "id": "download_button",
+        "id": "download",
         "position": {
           "x": "620px",
           "y": "70px",
