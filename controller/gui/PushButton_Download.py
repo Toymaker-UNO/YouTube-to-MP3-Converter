@@ -3,7 +3,6 @@ from PyQt5.QtCore import QObject, pyqtSignal, QThread
 import threading
 from model.Log import log
 from controller.gui.LineEdit_URLInput import line_edit_url_input_instance
-from controller.gui.PushButton_CheckURL import push_button_check_url_instance
 from controller.gui.ComboBox_AudioQuality import combo_box_audio_quality_instance
 from controller.gui.PlainTextEdit_LogDisplay import plain_text_edit_log_display_instance
 from controller.logic.DownloadYoutubeAudio import download_youtube_audio_instance
@@ -15,7 +14,6 @@ class DownloadThread(QThread):
     download_completed = pyqtSignal()  # 완료 메시지
     error_occurred = pyqtSignal(str)    # 오류 메시지
 
-    
     def __init__(self, url, quality, save_path):
         super().__init__()
         self.url = url
@@ -136,12 +134,16 @@ class PushButton_Download:
         """모든 버튼을 비활성화합니다."""
         self.disable()
         combo_box_audio_quality_instance.disable()
+        # 순환 참조를 피하기 위해 동적으로 import
+        from controller.gui.PushButton_CheckURL import push_button_check_url_instance
         push_button_check_url_instance.disable()
 
     def _all_buttons_enable(self):
         """모든 버튼을 활성화합니다."""
         self.enable()
         combo_box_audio_quality_instance.enable()
+        # 순환 참조를 피하기 위해 동적으로 import
+        from controller.gui.PushButton_CheckURL import push_button_check_url_instance
         push_button_check_url_instance.enable()
 
 # 싱글톤 인스턴스 생성
