@@ -1,11 +1,11 @@
 from PyQt5.QtWidgets import QMainWindow, QPushButton, QLineEdit, QApplication, QPlainTextEdit, QComboBox
 from PyQt5.QtGui import QClipboard
 from PyQt5.QtCore import Qt, QTimer, QThread, pyqtSignal
-from controller.Converter import Converter
-from controller.DownloadYoutubeAudio import DownloadYoutubeAudio
+from controller.logic.Converter import Converter
+from controller.logic.DownloadYoutubeAudio import DownloadYoutubeAudio
 import os
 from datetime import datetime
-from controller.gui.LogDisplay import uic_log_display_instance
+from controller.gui.LogDisplay import log_display_instance
 
 # 전역 상수 정의
 URL_CHECK_DELAY_MS = 1000  # URL 검사 타이머 지연 시간 (밀리초)
@@ -59,7 +59,7 @@ class DownloadThread(QThread):
         try:
             # 진행 상황 콜백 함수
             def on_progress(percentage):
-                progress_text = "다운로드: " + uic_log_display_instance.create_progress_bar(percentage)
+                progress_text = "다운로드: " + log_display_instance.create_progress_bar(percentage)
                 if 100 != percentage:
                     progress_text += f" ({self.current_speed:>12})"
                 self.progress_updated.emit(progress_text, True)
@@ -68,7 +68,7 @@ class DownloadThread(QThread):
                 self.current_speed = speed
                 
             def on_convert_progress(percentage):
-                progress_text = "MP3변환: " + uic_log_display_instance.create_progress_bar(round(percentage, 2))
+                progress_text = "MP3변환: " + log_display_instance.create_progress_bar(round(percentage, 2))
                 self.progress_updated.emit(progress_text, True)
                 
             # 다운로드 시작 메시지
@@ -91,7 +91,7 @@ class DownloadThread(QThread):
                 progress_callback=on_convert_progress
             )
             
-            progress_text = "MP3변환: " + uic_log_display_instance.create_progress_bar(100)
+            progress_text = "MP3변환: " + log_display_instance.create_progress_bar(100)
             self.progress_updated.emit(progress_text, True)
             self.download_completed.emit(f"저장 경로: {final_path}")
             
@@ -111,9 +111,9 @@ class Controller:
 
     def _update_log(self, message, current_line: bool = False):
         if current_line:
-            uic_log_display_instance.print_current_line(message)
+            log_display_instance.print_current_line(message)
         else:
-            uic_log_display_instance.print_next_line(message)
+            log_display_instance.print_next_line(message)
 
     def run(self, window: QMainWindow):
         """
@@ -130,7 +130,7 @@ class Controller:
             self._download_thread = None
             self._setup_event_handlers()
             self._initialized = True
-            uic_log_display_instance.setup(window)
+            log_display_instance.setup(window)
             self._update_log("URL입력을 기다리고 있습니다.")
 
     def _setup_event_handlers(self):

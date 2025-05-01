@@ -2,8 +2,8 @@ import re
 import yt_dlp
 import os
 from model.Log import Log
-from controller.YoutubeTitle import YoutubeTitle
-from controller.ConverterToMP3 import ConverterToMP3
+from controller.logic.YoutubeTitle import YoutubeTitle
+from controller.logic.ConverterToMP3 import ConverterToMP3
 
 class Converter:
     def __init__(self, save_path=None):
