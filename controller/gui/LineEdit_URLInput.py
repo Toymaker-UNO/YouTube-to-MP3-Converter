@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QLineEdit, QMainWindow
 from PyQt5.QtCore import QObject, pyqtSignal
 import threading
-from model.Log import log_instance
+from model.Log import log
 
 class LineEdit_URLInput:
     _instance = None
@@ -30,7 +30,7 @@ class LineEdit_URLInput:
                 self._url_input.setPlaceholderText("Enter YouTube URL here.")
                 self.enable()
             else:
-                log_instance.critical("LineEdit_URLInput 초기화 실패")
+                log.critical("LineEdit_URLInput 초기화 실패")
 
     def enable(self):
         self._url_input.setEnabled(True)

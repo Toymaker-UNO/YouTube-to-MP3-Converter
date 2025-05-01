@@ -6,7 +6,7 @@ from controller.gui.PushButton_Download import push_button_download_instance
 from controller.gui.PlainTextEdit_LogDisplay import plain_text_edit_log_display_instance
 from controller.logic.CheckURL import check_url_instance
 import threading
-from model.Log import log_instance
+from model.Log import log
 
 class PushButton_CheckURL:
     _instance = None
@@ -36,7 +36,7 @@ class PushButton_CheckURL:
                 self._check_url.clicked.connect(self._handle_check_url_click)
                 self.enable()
             else:
-                log_instance.critical("PushButton_CheckURL 초기화 실패")
+                log.critical("PushButton_CheckURL 초기화 실패")
 
     def enable(self):
         self._check_url.setEnabled(True)
@@ -46,6 +46,7 @@ class PushButton_CheckURL:
 
     def _handle_check_url_click(self):
         """URL 검사 버튼 클릭 이벤트 핸들러"""
+        log.debug("URL 검사 버튼 클릭")
         if not self._url_input:
             return
             

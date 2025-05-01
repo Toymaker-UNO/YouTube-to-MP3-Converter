@@ -1,0 +1,6 @@
+[2025-05-01 16:16:40.713607][DEBUG][PushButton_CheckURL.py:49] URL 검사 버튼 클릭
+[2025-05-01 16:16:42.018580][DEBUG][PushButton_CheckURL.py:49] URL 검사 버튼 클릭
+[2025-05-01 16:16:42.517844][DEBUG][PushButton_CheckURL.py:49] URL 검사 버튼 클릭
+[2025-05-01 16:16:42.999665][DEBUG][PushButton_CheckURL.py:49] URL 검사 버튼 클릭
+[2025-05-01 16:16:43.216556][DEBUG][PushButton_CheckURL.py:49] URL 검사 버튼 클릭
+[2025-05-01 16:16:43.405206][DEBUG][PushButton_CheckURL.py:49] URL 검사 버튼 클릭
