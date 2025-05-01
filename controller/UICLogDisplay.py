@@ -25,7 +25,7 @@ class UICLogDisplay:
         self._log_display = None
         self._contents = []  # 문자열을 저장하는 리스트
         
-    def initialize(self, window: QMainWindow):
+    def setup(self, window: QMainWindow):
         """UICLogDisplay를 초기화합니다.
         
         Args:
