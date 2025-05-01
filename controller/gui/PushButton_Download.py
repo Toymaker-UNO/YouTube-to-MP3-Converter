@@ -27,6 +27,7 @@ class PushButton_Download:
             self._window = window
             self._download = self._window.findChild(QPushButton, "download")
             if self._download:
+                self._download.clicked.connect(self._handle_download_click)
                 self.disable()
             else:
                 print("PushButton_Download 초기화 실패")
@@ -36,6 +37,10 @@ class PushButton_Download:
     
     def disable(self):
         self._download.setEnabled(False)
+
+    def _handle_download_click(self):
+        """다운로드 버튼 클릭 이벤트 핸들러"""
+        pass
 
 # 싱글톤 인스턴스 생성
 push_button_download_instance = PushButton_Download()

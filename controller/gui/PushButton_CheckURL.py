@@ -1,5 +1,10 @@
-from PyQt5.QtWidgets import QPushButton, QMainWindow
+from PyQt5.QtWidgets import QPushButton, QMainWindow, QLineEdit
 from PyQt5.QtCore import QObject, pyqtSignal
+from controller.gui.LineEdit_URLInput import line_edit_url_input_instance
+from controller.gui.ComboBox_AudioQuality import combo_box_audio_quality_instance
+from controller.gui.PushButton_Download import push_button_download_instance
+from controller.gui.PlainTextEdit_LogDisplay import plain_text_edit_log_display_instance
+from controller.logic.CheckURL import check_url_instance
 import threading
 
 class PushButton_CheckURL:
@@ -27,6 +32,7 @@ class PushButton_CheckURL:
             self._window = window
             self._check_url = self._window.findChild(QPushButton, "check_url")
             if self._check_url:
+                self._check_url.clicked.connect(self._handle_check_url_click)
                 self.enable()
             else:
                 print("PushButton_CheckURL 초기화 실패")
@@ -36,6 +42,20 @@ class PushButton_CheckURL:
     
     def disable(self):
         self._check_url.setEnabled(False)
+
+    def _handle_check_url_click(self):
+        """URL 검사 버튼 클릭 이벤트 핸들러"""
+        if not self._url_input:
+            return
+            
+        url = self._url_input.text().strip()
+        if check_url_instance.is_valid_youtube_url(url):
+            plain_text_edit_log_display_instance.print_next_line("유효한 URL입니다.")
+            combo_box_audio_quality_instance.enable()
+            push_button_download_instance.enable()
+            self.disable()
+        else:
+            plain_text_edit_log_display_instance.print_next_line("유효하지 않은 URL입니다.")
 
 # 싱글톤 인스턴스 생성
 push_button_check_url_instance = PushButton_CheckURL()
