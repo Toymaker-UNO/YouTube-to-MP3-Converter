@@ -38,5 +38,8 @@ class LineEdit_URLInput:
     def disable(self):
         self._url_input.setEnabled(False)
 
+    def get_url(self):
+        return self._url_input.text().strip()
+
 # 싱글톤 인스턴스 생성
 line_edit_url_input_instance = LineEdit_URLInput()

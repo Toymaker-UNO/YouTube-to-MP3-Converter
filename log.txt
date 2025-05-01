@@ -4,3 +4,26 @@
 [2025-05-01 16:16:42.999665][DEBUG][PushButton_CheckURL.py:49] URL 검사 버튼 클릭
 [2025-05-01 16:16:43.216556][DEBUG][PushButton_CheckURL.py:49] URL 검사 버튼 클릭
 [2025-05-01 16:16:43.405206][DEBUG][PushButton_CheckURL.py:49] URL 검사 버튼 클릭
+[2025-05-01 16:17:14.912339][DEBUG][PushButton_CheckURL.py:49] URL 검사 버튼 클릭
+[2025-05-01 16:17:15.331023][DEBUG][PushButton_CheckURL.py:49] URL 검사 버튼 클릭
+[2025-05-01 16:18:16.577925][DEBUG][PushButton_CheckURL.py:49] URL 검사 버튼 클릭
+[2025-05-01 16:18:16.588269][CRITICAL][PushButton_CheckURL.py:51] URL 입력 필드가 존재하지 않습니다.
+[2025-05-01 16:18:18.533530][DEBUG][PushButton_CheckURL.py:49] URL 검사 버튼 클릭
+[2025-05-01 16:18:18.534412][CRITICAL][PushButton_CheckURL.py:51] URL 입력 필드가 존재하지 않습니다.
+[2025-05-01 16:18:19.771912][DEBUG][PushButton_CheckURL.py:49] URL 검사 버튼 클릭
+[2025-05-01 16:18:19.772386][CRITICAL][PushButton_CheckURL.py:51] URL 입력 필드가 존재하지 않습니다.
+[2025-05-01 16:19:00.234870][DEBUG][PushButton_CheckURL.py:48] URL 검사 버튼 클릭
+[2025-05-01 16:20:52.502000][DEBUG][PushButton_CheckURL.py:48] URL 검사 버튼 클릭
+[2025-05-01 16:20:52.510972][DEBUG][PushButton_CheckURL.py:58] 유효하지 않은 URL입니다.
+[2025-05-01 16:20:55.110779][DEBUG][PushButton_CheckURL.py:48] URL 검사 버튼 클릭
+[2025-05-01 16:20:55.111861][DEBUG][PushButton_CheckURL.py:58] 유효하지 않은 URL입니다.
+[2025-05-01 16:20:56.642217][DEBUG][PushButton_CheckURL.py:48] URL 검사 버튼 클릭
+[2025-05-01 16:20:56.643350][DEBUG][PushButton_CheckURL.py:58] 유효하지 않은 URL입니다.
+[2025-05-01 16:20:58.611189][DEBUG][PushButton_CheckURL.py:48] URL 검사 버튼 클릭
+[2025-05-01 16:20:58.612002][DEBUG][PushButton_CheckURL.py:58] 유효하지 않은 URL입니다.
+[2025-05-01 16:21:01.979943][DEBUG][PushButton_CheckURL.py:48] URL 검사 버튼 클릭
+[2025-05-01 16:21:01.980745][DEBUG][PushButton_CheckURL.py:58] 유효하지 않은 URL입니다.
+[2025-05-01 16:21:02.973333][DEBUG][PushButton_CheckURL.py:48] URL 검사 버튼 클릭
+[2025-05-01 16:21:02.973958][DEBUG][PushButton_CheckURL.py:58] 유효하지 않은 URL입니다.
+[2025-05-01 16:21:13.163836][DEBUG][PushButton_CheckURL.py:48] URL 검사 버튼 클릭
+[2025-05-01 16:21:13.164850][DEBUG][PushButton_CheckURL.py:52] 유효한 URL입니다.

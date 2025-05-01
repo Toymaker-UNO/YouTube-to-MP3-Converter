@@ -20,7 +20,6 @@ class PushButton_CheckURL:
     
     def __init__(self):
         self._window = None
-        self._url_input = None
         self._current_url = ""
 
     def setup(self, window: QMainWindow):
@@ -47,16 +46,16 @@ class PushButton_CheckURL:
     def _handle_check_url_click(self):
         """URL 검사 버튼 클릭 이벤트 핸들러"""
         log.debug("URL 검사 버튼 클릭")
-        if not self._url_input:
-            return
             
-        url = self._url_input.text().strip()
+        url = line_edit_url_input_instance.get_url()
         if check_url_instance.is_valid_youtube_url(url):
+            log.debug("유효한 URL입니다.")
             plain_text_edit_log_display_instance.print_next_line("유효한 URL입니다.")
             combo_box_audio_quality_instance.enable()
             push_button_download_instance.enable()
             self.disable()
         else:
+            log.debug("유효하지 않은 URL입니다.")
             plain_text_edit_log_display_instance.print_next_line("유효하지 않은 URL입니다.")
 
 # 싱글톤 인스턴스 생성
