@@ -1,4 +1,3 @@
-import re
 import yt_dlp
 from model.Log import Log
 
@@ -45,9 +44,4 @@ class YoutubeTitle:
                 
         except Exception as e:
             self.log.error(f"비디오 정보를 가져오는 중 오류 발생: {str(e)}")
-            return None
-            
-    def is_valid_url(self, url):
-        """YouTube URL의 유효성을 검사합니다."""
-        youtube_regex = r'(https?://)?(www\.)?(youtube|youtu|youtube-nocookie)\.(com|be)/(watch\?v=|embed/|v/|.+\?v=)?([^"&?/s]{11})'
-        return bool(re.match(youtube_regex, url)) 
+            return None 

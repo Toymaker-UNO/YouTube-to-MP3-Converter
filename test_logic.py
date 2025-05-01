@@ -2,18 +2,21 @@ from controller.logic.YoutubeTitle import YoutubeTitle
 from controller.logic.DownloadYoutubeAudio import DownloadYoutubeAudio
 from controller.logic.ConverterToMP3 import ConverterToMP3
 from controller.gui.PlainTextEdit_LogDisplay import plain_text_edit_log_display_instance
+from controller.logic.CheckURL import CheckURL
 import os
 
 def test_youtube_download_and_convert():
     # 테스트용 YouTube URL
-    test_url = "https://youtu.be/L4XTJao2iLA"
-    #test_url = "https://youtu.be/9VqMnuBFptQ"
+    #test_url = "https://youtu.be/L4XTJao2iLA"
+    test_url = "https://youtu.be/9VqMnuBFptQ"
+
+    check_url = CheckURL()
     
     # YoutubeTitle 인스턴스 생성
     youtube_title = YoutubeTitle()
     
     # URL 유효성 검사
-    if not youtube_title.is_valid_url(test_url):
+    if not check_url.is_valid_youtube_url(test_url):
         print("유효하지 않은 YouTube URL입니다.")
         return
     
