@@ -151,6 +151,8 @@ class PushButton_Download:
    
     def _download_completed(self, downloaded_file, title):
         """다운로드 완료 핸들러"""
+        progress_text = "다운로드: " + plain_text_edit_log_display_instance.create_progress_bar(100)
+        plain_text_edit_log_display_instance.print_current_line(progress_text)
         plain_text_edit_log_display_instance.print_next_line("다운로드 완료!")
         plain_text_edit_log_display_instance.print_next_line("MP3 변환을 시작합니다.")
         plain_text_edit_log_display_instance.print_next_line("MP3 변환 준비 중...")
@@ -168,8 +170,11 @@ class PushButton_Download:
 
     def _convert_completed(self, final_path):
         """MP3 변환 완료 핸들러"""
+        progress_text = "MP3변환: " + plain_text_edit_log_display_instance.create_progress_bar(100)
+        plain_text_edit_log_display_instance.print_current_line(progress_text)
         plain_text_edit_log_display_instance.print_next_line("MP3 변환 완료!")
         plain_text_edit_log_display_instance.print_next_line("저장 경로: " + final_path)
+        self._all_buttons_enable()
 
     def _progress_updated(self, message):
         plain_text_edit_log_display_instance.print_current_line(message)
