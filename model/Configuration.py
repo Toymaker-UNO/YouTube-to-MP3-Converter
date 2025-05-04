@@ -522,7 +522,7 @@ class Configuration:
             # 설정 파일 생성
             with open(config_file, 'w', encoding='utf-8') as f:
                 json.dump(default_config, f, indent=2, ensure_ascii=False)
-            print(f"기본 설정 파일이 생성되었습니다: {config_file}")
+            #print(f"기본 설정 파일이 생성되었습니다: {config_file}")
             
         except Exception as e:
             print(f"기본 설정 파일 생성 중 오류 발생: {str(e)}")
