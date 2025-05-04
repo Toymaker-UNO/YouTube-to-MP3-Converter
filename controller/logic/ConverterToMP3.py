@@ -5,10 +5,13 @@ from model.Log import Log
 import subprocess
 import re
 import threading
+import sys
 
 class ConverterToMP3:
     _instance = None
     _lock = threading.Lock()
+    _is_frozen = getattr(sys, 'frozen', False)
+    _base_path = os.path.dirname(sys.executable) if _is_frozen else os.path.dirname(os.path.abspath(__file__))
 
     def __new__(cls) -> 'ConverterToMP3':
         with cls._lock:
@@ -18,6 +21,14 @@ class ConverterToMP3:
 
     def __init__(self):
         pass
+
+    def get_ffmpeg_path(self):
+        if self._is_frozen:
+            # PyInstaller로 패키징된 경우
+            return os.path.join(self._base_path, 'resources', 'ffmpeg', 'ffmpeg.exe')
+        else:
+            # 개발 환경에서 실행되는 경우
+            return 'ffmpeg'  # 시스템 PATH 사용
             
     def convert(self, input_file, title, quality, save_path, progress_callback=None):
         """다운로드된 비디오를 MP3로 변환합니다."""
@@ -41,8 +52,9 @@ class ConverterToMP3:
             temp_mp3 = os.path.join(save_path, f"temp_{int(datetime.now().timestamp())}.mp3")
             
             # ffmpeg 명령어 구성
+            ffmpeg_path = self.get_ffmpeg_path()
             cmd = [
-                'ffmpeg',
+                ffmpeg_path,
                 '-i', input_file,
                 '-acodec', 'libmp3lame',
                 '-b:a', f'{quality_map[quality]}k',
