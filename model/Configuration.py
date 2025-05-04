@@ -1,4 +1,6 @@
 import json
+import os
+import shutil
 from typing import Dict, Any
 
 class Configuration:
@@ -62,6 +64,10 @@ class Configuration:
         self._config_file = config_file
         
         try:
+            # 설정 파일이 존재하지 않으면 기본 설정 파일 생성
+            if not os.path.exists(config_file):
+                self._create_default_config(config_file)
+                
             with open(config_file, 'r', encoding='utf-8') as f:
                 self._config = json.load(f)
         except FileNotFoundError:
@@ -163,6 +169,364 @@ class Configuration:
                 json.dump(self._config, f, indent=2, ensure_ascii=False)
         except Exception as e:
             print(f"설정 파일 저장 중 오류 발생: {str(e)}") 
+
+    def _create_default_config(self, config_file: str) -> None:
+        """기본 설정 파일을 생성합니다.
+        
+        Args:
+            config_file (str): 생성할 설정 파일의 경로
+        """
+        # 기본 설정 내용
+        default_config = {
+            "logging": {
+                "enable_logging": False,
+                "log_file": "log.txt",
+                "max_log_size_mb": 10,
+                "max_backup_count": 2,
+                "encoding": "utf-8",
+                "log_level": "DEBUG",
+                "enable_performance_logging": True
+            },
+            "gui": {
+                "main_window": {
+                    "position": {
+                        "x": "100px",
+                        "y": "100px",
+                        "width": "800px",
+                        "height": "350px",
+                        "fixed_size": True
+                    },
+                    "stylesheet": {
+                        "QMainWindow": {
+                            "background-color": "#2b2b2b",
+                            "color": "#ffffff",
+                            "border": "1px solid #3c3f41",
+                            "border-radius": "5px",
+                            "padding": "20px",
+                            "margin": "5px"
+                        }
+                    },
+                    "animation": {
+                        "enabled": False,
+                        "duration": 300,
+                        "easing": "OutCubic",
+                        "initial_opacity": 1.0,
+                        "start_delay": 100
+                    },
+                    "customizing": {
+                        "title": "YouTube to MP3",
+                        "icon_path": "resources/icon.png"
+                    }
+                },
+                "labels": [
+                    {
+                        "id": "url_label",
+                        "position": {
+                            "x": "30px",
+                            "y": "30px",
+                            "alignment": "left",
+                            "margin": {
+                                "top": "10px",
+                                "right": "10px",
+                                "bottom": "10px",
+                                "left": "10px"
+                            }
+                        },
+                        "stylesheet": {
+                            "QLabel": {
+                                "color": "#ffffff",
+                                "font-size": "14px",
+                                "font-family": "Arial",
+                                "font-weight": "normal",
+                                "background-color": "transparent",
+                                "border": "0px solid transparent",
+                                "border-radius": "0px",
+                                "padding": "5px"
+                            }
+                        },
+                        "animation": {
+                            "enabled": False,
+                            "duration": 200,
+                            "easing": "OutCubic",
+                            "initial_opacity": 0.0,
+                            "start_delay": 0
+                        },
+                        "customizing": {
+                            "text": "YouTube URL:"
+                        }
+                    },
+                    {
+                        "id": "quality_label",
+                        "position": {
+                            "x": "30px",
+                            "y": "70px",
+                            "alignment": "left",
+                            "margin": {
+                                "top": "10px",
+                                "right": "10px",
+                                "bottom": "10px",
+                                "left": "10px"
+                            }
+                        },
+                        "stylesheet": {
+                            "QLabel": {
+                                "color": "#ffffff",
+                                "font-size": "14px",
+                                "font-family": "Arial",
+                                "font-weight": "normal",
+                                "background-color": "transparent",
+                                "border": "0px solid transparent",
+                                "border-radius": "0px",
+                                "padding": "5px"
+                            }
+                        },
+                        "animation": {
+                            "enabled": False,
+                            "duration": 200,
+                            "easing": "OutCubic",
+                            "initial_opacity": 0.0,
+                            "start_delay": 0
+                        },
+                        "customizing": {
+                            "text": "Audio Quality:"
+                        }
+                    }
+                ],
+                "line_edits": [
+                    {
+                        "id": "url_input",
+                        "position": {
+                            "x": "150px",
+                            "y": "30px",
+                            "width": "450px",
+                            "height": "30px"
+                        },
+                        "stylesheet": {
+                            "QLineEdit": {
+                                "color": "#ffffff",
+                                "background-color": "#3c3f41",
+                                "border": "1px solid #4d4d4d",
+                                "border-radius": "3px",
+                                "padding": "5px",
+                                "font-size": "14px",
+                                "font-family": "Arial"
+                            },
+                            "QLineEdit:disabled": {
+                                "background-color": "#2b2b2b",
+                                "color": "#555555",
+                                "border": "1px solid #3c3f41"
+                            }
+                        },
+                        "animation": {
+                            "enabled": False,
+                            "duration": 200,
+                            "easing": "OutCubic",
+                            "initial_opacity": 1.0,
+                            "start_delay": 0
+                        },
+                        "customizing": {
+                            "placeholder_text": "Enter YouTube URL here...",
+                            "max_length": 1000,
+                            "enabled": True
+                        }
+                    }
+                ],
+                "push_buttons": [
+                    {
+                        "id": "check_url",
+                        "position": {
+                            "x": "620px",
+                            "y": "30px",
+                            "width": "150px",
+                            "height": "30px"
+                        },
+                        "stylesheet": {
+                            "QPushButton": {
+                                "background-color": "#2b2b2b",
+                                "color": "#ffffff",
+                                "border": "2px solid #3b3b3b",
+                                "font-size": "12px"
+                            },
+                            "QPushButton:hover": {
+                                "background-color": "#3b3b3b"
+                            },
+                            "QPushButton:pressed": {
+                                "background-color": "#1b1b1b",
+                                "border": "2px solid #2b2b2b"
+                            },
+                            "QPushButton:disabled": {
+                                "background-color": "#2b2b2b",
+                                "color": "#555555"
+                            }
+                        },
+                        "animation": {
+                            "enabled": False,
+                            "duration": 200,
+                            "easing": "OutCubic",
+                            "initial_opacity": 1.0,
+                            "start_delay": 0
+                        },
+                        "customizing": {
+                            "text": "Check URL",
+                            "icon_path": "resources/check_url_button.png",
+                            "tooltip": "Check URL"
+                        }
+                    },
+                    {
+                        "id": "download",
+                        "position": {
+                            "x": "620px",
+                            "y": "70px",
+                            "width": "150px",
+                            "height": "30px"
+                        },
+                        "stylesheet": {
+                            "QPushButton": {
+                                "background-color": "#2b2b2b",
+                                "color": "#ffffff",
+                                "border": "2px solid #3b3b3b",
+                                "font-size": "12px"
+                            },
+                            "QPushButton:hover": {
+                                "background-color": "#3b3b3b"
+                            },
+                            "QPushButton:pressed": {
+                                "background-color": "#1b1b1b",
+                                "border": "2px solid #2b2b2b"
+                            },
+                            "QPushButton:disabled": {
+                                "background-color": "#2b2b2b",
+                                "color": "#555555"
+                            }
+                        },
+                        "animation": {
+                            "enabled": False,
+                            "duration": 200,
+                            "easing": "OutCubic",
+                            "initial_opacity": 1.0,
+                            "start_delay": 0
+                        },
+                        "customizing": {
+                            "text": "Download",
+                            "icon_path": "resources/download.png",
+                            "tooltip": "Start downloading MP3",
+                            "enabled": False
+                        }
+                    }
+                ],
+                "combo_boxes": [
+                    {
+                        "id": "audio_quality",
+                        "position": {
+                            "x": "150px",
+                            "y": "70px",
+                            "width": "450px",
+                            "height": "30px"
+                        },
+                        "stylesheet": {
+                            "QComboBox": {
+                                "background-color": "#3c3f41",
+                                "color": "#ffffff",
+                                "border": "1px solid #4d4d4d",
+                                "border-radius": "3px",
+                                "padding": "5px",
+                                "font-size": "14px",
+                                "font-family": "Arial"
+                            },
+                            "QComboBox:disabled": {
+                                "background-color": "#2b2b2b",
+                                "color": "#555555",
+                                "border": "1px solid #3c3f41"
+                            },
+                            "QComboBox QAbstractItemView": {
+                                "background-color": "#2b2b2b",
+                                "color": "#ffffff",
+                                "selection-background-color": "#3c3f41",
+                                "border": "1px solid #3c3f41",
+                                "outline": "none"
+                            }
+                        },
+                        "animation": {
+                            "enabled": False,
+                            "duration": 200,
+                            "easing": "OutCubic",
+                            "initial_opacity": 1.0,
+                            "start_delay": 0
+                        },
+                        "customizing": {
+                            "items": [
+                                "320K", 
+                                "256K", 
+                                "192K", 
+                                "160K", 
+                                "128K", 
+                                "96K", 
+                                "64K", 
+                                "48K"],
+                            "default_index": 0,
+                            "enabled": False
+                        }
+                    }
+                ],
+                "plain_text_edits": [
+                    {
+                        "id": "log_display",
+                        "position": {
+                            "x": "30px",
+                            "y": "120px",
+                            "width": "740px",
+                            "height": "200px"
+                        },
+                        "stylesheet": {
+                            "QPlainTextEdit": {
+                                "background-color": "#2b2b2b",
+                                "color": "#ffffff",
+                                "border": "1px solid #3c3f41",
+                                "border-radius": "3px",
+                                "padding": "5px",
+                                "font-family": "Consolas, 'Courier New', monospace",
+                                "font-size": "12px"
+                            },
+                            "QScrollBar:vertical": {
+                                "background-color": "#2b2b2b",
+                                "width": "12px",
+                                "margin": "0px"
+                            },
+                            "QScrollBar::handle:vertical": {
+                                "background-color": "#3c3f41",
+                                "min-height": "20px",
+                                "border-radius": "6px"
+                            },
+                            "QScrollBar::handle:vertical:hover": {
+                                "background-color": "#4a90e2"
+                            },
+                            "QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical": {
+                                "height": "0px"
+                            }
+                        },
+                        "customizing": {
+                            "editable": False,
+                            "text_interaction": "TextSelectableByMouse",
+                            "line_wrap": False,
+                            "tab_stop_width": 4,
+                            "scroll_bar_vertical": True,
+                            "scroll_bar_horizontal": True,
+                            "cursor_visible": False
+                        }
+                    }
+                ]
+            }
+        }
+        
+        try:
+            # 설정 파일 생성
+            with open(config_file, 'w', encoding='utf-8') as f:
+                json.dump(default_config, f, indent=2, ensure_ascii=False)
+            print(f"기본 설정 파일이 생성되었습니다: {config_file}")
+            
+        except Exception as e:
+            print(f"기본 설정 파일 생성 중 오류 발생: {str(e)}")
+            raise
 
 
 # 싱글톤 인스턴스 생성
