@@ -86,6 +86,12 @@ class PlainTextEdit_LogDisplay:
                         self._print(self._contents[i])
 
     def _print(self, log_message: str, set_flag: bool = False):
+        if set_flag == True:
+            self._log_display.setPlainText(log_message)
+        else:
+            self._log_display.appendPlainText(log_message)
+        self._scroll_to_bottom()
+        '''
         log_message_list = self._string_devider(log_message, LOG_DISPLAY_WINDOW_WIDTH, LOG_DISPLAY_WINDOW_WIDTH - TIME_STRING_LENGTH, TIME_STRING_LENGTH)
         i = 0
         for log_message in log_message_list:
@@ -95,6 +101,7 @@ class PlainTextEdit_LogDisplay:
                 self._log_display.appendPlainText(log_message)
             i += 1
             self._scroll_to_bottom()
+        '''
             
     def _scroll_to_bottom(self):
         """로그 디스플레이를 최하단으로 스크롤합니다."""
