@@ -86,7 +86,8 @@ class ConverterToMP3:
             process = subprocess.Popen(
                 cmd,
                 stderr=subprocess.PIPE,
-                universal_newlines=True
+                universal_newlines=True,
+                creationflags=subprocess.CREATE_NO_WINDOW  # CMD 창 숨기기
             )
             
             # 진행률 추적
