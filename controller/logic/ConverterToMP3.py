@@ -1,7 +1,7 @@
 import os
 from datetime import datetime
 import ffmpeg
-from model.Log import Log
+from model.Log import log
 import subprocess
 import re
 import threading
@@ -117,7 +117,7 @@ class ConverterToMP3:
             return final_path
             
         except Exception as e:
-            self.log.error(f"변환 중 오류 발생: {str(e)}")
+            log.error(f"변환 중 오류 발생: {str(e)}")
             raise 
 
 # 싱글톤 인스턴스 생성
