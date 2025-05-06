@@ -11,7 +11,7 @@ class Configuration:
     # 필수 설정 키 목록
     _required_keys = {
         "gui": {
-            "main_window": {
+            "main_windows": {
                 "position": {
                     "x": str,
                     "y": str,

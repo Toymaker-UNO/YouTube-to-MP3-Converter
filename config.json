@@ -9,12 +9,13 @@
     "enable_performance_logging": true
   },
   "gui": {
-    "main_window": {
+    "main_windows": {
+      "id": "main_window",
       "position": {
         "x": "100px",
         "y": "100px",
         "width": "800px",
-        "height": "350px",
+        "height": "385px",
         "fixed_size": true
       },
       "stylesheet": {
@@ -231,6 +232,47 @@
           "text": "Download",
           "icon_path": "resources/download.png",
           "tooltip": "Start downloading MP3",
+          "enabled": false
+        }
+      },
+      {
+        "id": "edit_mp3",
+        "position": {
+          "x": "620px",
+          "y": "335px",
+          "width": "150px",
+          "height": "30px"
+        },
+        "stylesheet": {
+          "QPushButton": {
+            "background-color": "#2b2b2b",
+            "color": "#ffffff",
+            "border": "2px solid #3b3b3b",
+            "font-size": "12px"
+          },
+          "QPushButton:hover": {
+            "background-color": "#3b3b3b"
+          },
+          "QPushButton:pressed": {
+            "background-color": "#1b1b1b",
+            "border": "2px solid #2b2b2b"
+          },
+          "QPushButton:disabled": {
+            "background-color": "#2b2b2b",
+            "color": "#555555"
+          }
+        },
+        "animation": {
+          "enabled": false,
+          "duration": 200,
+          "easing": "OutCubic",
+          "initial_opacity": 1.0,
+          "start_delay": 0
+        },
+        "customizing": {
+          "text": "Edit MP3",
+          "icon_path": "resources/edit_mp3.png",
+          "tooltip": "Edit MP3",
           "enabled": false
         }
       }

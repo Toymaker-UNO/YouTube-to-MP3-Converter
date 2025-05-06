@@ -57,7 +57,7 @@ class GUIBuilder:
             QMainWindow: 생성된 메인 윈도우
         """
         window = QMainWindow()
-        window_config = configuration_instance.get('gui', 'main_window')
+        window_config = configuration_instance.get('gui', 'main_windows')
         
         # 기본 설정 적용
         if 'customizing' in window_config and 'title' in window_config['customizing']:
